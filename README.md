@@ -184,7 +184,7 @@ claude mcp add mnemos-os "[PATH_TO_MNEMOS-OS]/mnemos.bat" mcp --scope user
 *   **Deep Help:** Type `help` in the terminal for a detailed command guide.
 
 ### **🛡️ Advanced Workflows**
-*   **Guardrails:** Use the `ANTI` aspect to teach your AI what *not* to do (e.g., `add Project ANTI "Avoid nested loops in render"`).
+*   **Guardrails:** Use the `ANTI` aspect to teach your AI what *not* to do (e.g., `add MyProject ANTI "Avoid nested loops in render"`).
 *   **Continuity:** Use the `scratch` command before starting complex tasks so your AI never loses the plan.
 *   **Surgical Context:** Use `--file [path]` when adding facts to link them directly to a specific code file.
 
@@ -222,7 +222,7 @@ claude mcp add mnemos-os "[PATH_TO_MNEMOS-OS]/mnemos.bat" mcp --scope user
 
 ## 📄 License & Copyright
 
-Copyright © 2026 **Jonathan Schoenberger**
+Copyright © 2026 **Jonathan Schoenberger**  
 Licensed under the **GNU General Public License v3.0 (GPLv3)**
 
 *"Memory is not just storage; it is architecture."*
