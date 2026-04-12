@@ -1,6 +1,6 @@
 ![MNEMOS-OS Header](assets/img/mnemos-os.png)
 
-MNEMOS-OS is a high-performance memory kernel for AI-augmented development. It eliminates "AI Amnesia" by **distilling** complex developer sessions into high-density AAAK-Lite shorthand, providing surgical file-level context, mistake-prevention guardrails, and unbreakable task continuity via a persistent relational scratchpad.
+MNEMOS-OS is a high-performance memory kernel for AI-augmented development. It eliminates "AI Amnesia" by distilling complex developer sessions into high-density AAAK-Lite shorthand, providing surgical file-level context, mistake-prevention guardrails, and unbreakable task continuity via a persistent relational scratchpad.
 
 ![Version](https://img.shields.io/badge/version-v1.0.0-cyan)
 ![OS](https://img.shields.io/badge/OS-Windows%20%7C%20Linux%20%7C%20macOS-orange)

@@ -13,9 +13,39 @@ class MnemosCore:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             db_path = os.path.join(base_dir, "data", "mnemos.db")
         self.db_path = db_path
+        self._ensure_initialized()
 
     def _get_conn(self):
         return sqlite3.connect(self.db_path)
+
+    def _ensure_initialized(self):
+        """Checks if the database is initialized and runs schema if not."""
+        # Check if knowledge table exists
+        try:
+            with self._get_conn() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='knowledge'")
+                if not cursor.fetchone():
+                    self._run_schema()
+        except sqlite3.Error:
+            self._run_schema()
+
+    def _run_schema(self):
+        """Executes the schema.sql file to initialize the database."""
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        schema_path = os.path.join(base_dir, "data", "schema.sql")
+        
+        if not os.path.exists(schema_path):
+            # Fallback if run from a different context
+            schema_path = os.path.join("data", "schema.sql")
+            
+        if os.path.exists(schema_path):
+            with open(schema_path, 'r', encoding='utf-8') as f:
+                schema_script = f.read()
+            with self._get_conn() as conn:
+                conn.executescript(schema_script)
+                conn.commit()
+
 
     def add_fact(self, entity, aspect, raw_text, salience=5, file_path=None):
         """Compresses and saves a fact to the Mimir-DB."""

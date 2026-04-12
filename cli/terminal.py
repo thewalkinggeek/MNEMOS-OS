@@ -18,31 +18,30 @@ from core.engine import MnemosCore
 
 # Define style matching Gemini CLI aesthetic exactly
 mnemos_style = Style.from_dict({
-    'branding': '#4285f4 bold',
-    'version': '#909090',
-    'gray': '#909090',
-    'white': '#ffffff',
-    'magenta': '#ff00ff',
-    'cyan': '#00ffff',
-    'success': '#00ff00',
-    'error': '#ff4444 bg:default', # Explicitly no background
-    # Completion menu styling (Modern Dark)
+    'branding': 'ansibrightblue bold',
+    'version': 'ansigray',
+    'gray': 'ansigray',
+    'white': 'ansiwhite',
+    'magenta': 'ansimagenta',
+    'cyan': 'ansicyan',
+    'yellow': 'ansiyellow',
+    'success': 'ansigreen',
+    'error': 'ansired',
+    # Completion menu styling
     'completion-menu': 'bg:#222222 #ffffff',
     'completion-menu.completion': 'bg:#222222 #888888',
-    'completion-menu.completion.current': 'bg:#4285f4 #ffffff',
+    'completion-menu.completion.current': 'bg:ansibrightblue #ffffff',
     'completion-menu.meta.completion': 'bg:#222222 #aaaaaa',
-    'completion-menu.meta.completion.current': 'bg:#4285f4 #ffffff',
+    'completion-menu.meta.completion.current': 'bg:ansibrightblue #ffffff',
     # Toolbar styling
-    'toolbar': 'bg:#000000 #909090',
-    'toolbar.label': '#909090',
-    'toolbar.value': '#ffffff',
-    'toolbar.branding': '#4285f4 bold',
+    'toolbar': 'ansigray',
+    'toolbar.label': 'ansigray',
+    'toolbar.value': 'ansiwhite',
 })
 
 class MnemosCompleter(Completer):
     def __init__(self):
-        # Priority order: Core operations first, utilities last
-        self.commands = ['add', 'context', 'scratch', 'file', 'list', 'search', 'purge', 'menu', 'help', 'exit']
+        self.commands = ['add', 'context', 'scratch', 'file', 'list', 'search', 'purge', 'exit', 'help', 'menu']
         self.aspects = ['PREF', 'BUG', 'ARCH', 'DEP', 'LOG', 'ANTI']
         self.examples = {
             'add': 'Archive a project fact, decision, or preference',
@@ -92,8 +91,7 @@ def main():
         stats = mnemo.get_stats()
         workspace = os.path.basename(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         return HTML(
-            f'<branding>Mnemos-OS</branding> '
-            f'<style class="toolbar.label">workspace </style><style class="toolbar.value">~/{workspace}</style>'
+            f'<style class="toolbar.label">workspace (/directory) </style><style class="toolbar.value">~/{workspace}</style>'
             f'          <style class="toolbar.label">stats </style><style class="toolbar.value">{stats["entities"]} entities / {stats["facts"]} facts</style>'
             f'          <style class="toolbar.label">/mode </style><style class="toolbar.value">Interactive</style>'
         )
@@ -101,24 +99,24 @@ def main():
     # 1. Clear Screen
     os.system('cls' if os.name == 'nt' else 'clear')
 
-    # 2. Splash Header (Uniform)
-    print_formatted_text(HTML('\n 🧠  <branding>Mnemos-OS</branding> <version>v1.0.0</version>\n'))
-    print_formatted_text(HTML(' <magenta>&gt;</magenta> <white><b>The Memory Kernel for AI</b></white>\n'))
-    print_formatted_text(HTML(' <gray>----------------------------------</gray>\n'))
+    # 2. Splash Header (Fixed tag names to match style keys)
+    print_formatted_text(HTML('\n 🧠  <branding>Mnemos-OS</branding> <version>v1.0.0</version>\n'), style=mnemos_style)
+    print_formatted_text(HTML(' <magenta>&gt;</magenta> <white><b>The Memory Kernel for AI</b></white>\n'), style=mnemos_style)
+    print_formatted_text(HTML(' <gray>----------------------------------</gray>\n'), style=mnemos_style)
     
-    print_formatted_text(HTML(' <style bg="#333300" color="#ffff00">┌──────────────────────────────────────────────────────────────────────────┐</style>'))
-    print_formatted_text(HTML(' <style bg="#333300" color="#ffff00">│ MNEMOS is active. Memories are being automatically distilled and indexed │</style>'))
-    print_formatted_text(HTML(' <style bg="#333300" color="#ffff00">│ into the Mimir-DB. Hard-won knowledge is preserved across all sessions.  │</style>'))
-    print_formatted_text(HTML(' <style bg="#333300" color="#ffff00">└──────────────────────────────────────────────────────────────────────────┘</style>\n'))
+    # Yellow warning box
+    print_formatted_text(HTML(' <style color="ansiyellow">┌──────────────────────────────────────────────────────────────────────────┐</style>'), style=mnemos_style)
+    print_formatted_text(HTML(' <style color="ansiyellow">│ MNEMOS is active. Memories are being automatically distilled and indexed │</style>'), style=mnemos_style)
+    print_formatted_text(HTML(' <style color="ansiyellow">│ into the Mimir-DB. Hard-won knowledge is preserved across all sessions.  │</style>'), style=mnemos_style)
+    print_formatted_text(HTML(' <style color="ansiyellow">└──────────────────────────────────────────────────────────────────────────┘</style>\n'), style=mnemos_style)
 
-    print_formatted_text(HTML(' <ansigray>                                                                    ? for shortcuts</ansigray>'))
-    print_formatted_text(HTML(' <ansigray>TAB to autocomplete</ansigray>\n'))
+    print_formatted_text(HTML(' <gray>[TAB] to autocomplete or ? for Help</gray>\n'), style=mnemos_style)
 
     while True:
         try:
-            # Added branding to prompt so it stays blue even as you scroll
+            # Minimalist prompt: Blue branding + Magenta >
             user_input = session.prompt(
-                HTML('<branding>Mnemos-OS</branding> <magenta>&gt;</magenta> '),
+                HTML('<magenta>&gt;</magenta> '),
                 bottom_toolbar=get_toolbar
             )
             
@@ -131,7 +129,7 @@ def main():
             try:
                 args = shlex.split(user_input)
             except ValueError as e:
-                print_formatted_text(HTML(f' <error>[!] Parsing error: {e}</error>'))
+                print_formatted_text(HTML(f' <error>[!] Parsing error: {e}</error>'), style=mnemos_style)
                 continue
 
             cmd = args[0].lower()
@@ -148,23 +146,23 @@ def main():
                 
                 row_id = mnemo.add_fact(entity, aspect, text, salience, file_path=file_path)
                 if row_id == -1:
-                    print_formatted_text(HTML(' <gray>- Ignored (Salience Filter)</gray>'))
+                    print_formatted_text(HTML(' <gray>- Ignored (Salience Filter)</gray>'), style=mnemos_style)
                 else:
                     msg = f"Fact saved (ID: {row_id})"
                     if file_path: msg += f" linked to {file_path}"
-                    print_formatted_text(HTML(f' <success>* {msg}</success>'))
+                    print_formatted_text(HTML(f' <success>* {msg}</success>'), style=mnemos_style)
 
             elif cmd == 'scratch' and len(args) >= 2:
                 mnemo.update_scratchpad(args[1])
-                print_formatted_text(HTML(' <success>* Scratchpad updated.</success>'))
+                print_formatted_text(HTML(' <success>* Scratchpad updated.</success>'), style=mnemos_style)
 
             elif cmd == 'file' and len(args) >= 2:
                 ctx = mnemo.get_file_context(args[1])
                 if ctx:
-                    print_formatted_text(HTML(f'\n <magenta>[FILE CONTEXT: {args[1]}]</magenta>'))
-                    print_formatted_text(HTML(f' <cyan>{ctx}</cyan>\n'))
+                    print_formatted_text(HTML(f'\n <magenta>[FILE CONTEXT: {args[1]}]</magenta>'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <cyan>{ctx}</cyan>\n'), style=mnemos_style)
                 else:
-                    print_formatted_text(HTML(' <gray>- No specific memories for this file.</gray>'))
+                    print_formatted_text(HTML(' <gray>- No specific memories for this file.</gray>'), style=mnemos_style)
 
             elif cmd == 'context' and len(args) >= 2:
                 limit = 15
@@ -172,35 +170,35 @@ def main():
                     try: limit = int(args[args.index('--limit')+1])
                     except: pass
                 ctx = mnemo.get_context(args[1], limit=limit)
-                print_formatted_text(HTML(f'\n <magenta>[ACTIVE MINDSET: {args[1].upper()}]</magenta>'))
-                print_formatted_text(HTML(f' <cyan>{ctx}</cyan>\n'))
+                print_formatted_text(HTML(f'\n <magenta>[ACTIVE MINDSET: {args[1].upper()}]</magenta>'), style=mnemos_style)
+                print_formatted_text(HTML(f' <cyan>{ctx}</cyan>\n'), style=mnemos_style)
 
             elif cmd == 'search' and len(args) >= 2:
                 results = mnemo.search(args[1])
                 if not results:
-                    print_formatted_text(HTML(' <error>- No matches</error>'))
+                    print_formatted_text(HTML(' <error>- No matches</error>'), style=mnemos_style)
                 else:
-                    print_formatted_text(HTML(f'\n <cyan>SEARCH RESULTS:</cyan>'))
+                    print_formatted_text(HTML(f'\n <cyan>SEARCH RESULTS:</cyan>'), style=mnemos_style)
                     for r in results:
-                        ent, asp, short = r[0], r[1], r[2]
+                        ent, asp, short = str(r[0]), str(r[1]), str(r[2])
                         header = f"{ent:<12} | {asp:<6} |"
-                        print_formatted_text(HTML(f' <gray>{header}</gray> {short}'))
+                        print_formatted_text(HTML(f' <gray>{header}</gray> {short}'), style=mnemos_style)
                     print("")
 
             elif cmd == 'list':
                 entity = args[1] if len(args) >= 2 else None
                 results = mnemo.list_memories(entity=entity)
                 if not results:
-                    print_formatted_text(HTML(' <error>- Memory is empty.</error>'))
+                    print_formatted_text(HTML(' <error>- Memory is empty.</error>'), style=mnemos_style)
                 else:
                     header_txt = f"ALL MEMORIES:" if not entity else f"MEMORIES FOR {entity.upper()}:"
-                    print_formatted_text(HTML(f'\n <cyan>{header_txt}</cyan>'))
-                    print_formatted_text(HTML(f' <style color="#9b72f3">ENTITY       | TYPE   | S  | SHORTHAND</style>'))
-                    print_formatted_text(HTML(f' <gray>{"-" * 55}</gray>'))
+                    print_formatted_text(HTML(f'\n <cyan>{header_txt}</cyan>'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <magenta>ENTITY       | TYPE   | S  | SHORTHAND</magenta>'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <gray>{"-" * 55}</gray>'), style=mnemos_style)
                     for r in results:
-                        ent, asp, short, sal = r[0], r[1], r[2], r[3]
+                        ent, asp, short, sal = str(r[0]), str(r[1]), str(r[2]), str(r[3])
                         row_head = f"{ent:<12} | {asp:<6} | {sal:<2} |"
-                        print_formatted_text(HTML(f' <gray>{row_head}</gray> {short}'))
+                        print_formatted_text(HTML(f' <gray>{row_head}</gray> {short}'), style=mnemos_style)
                     print("")
 
             elif cmd == 'purge':
@@ -213,38 +211,38 @@ def main():
                     except: pass
                 
                 deleted = mnemo.purge_lethe(days=days, min_salience=min_salience)
-                print_formatted_text(HTML(f' <magenta>* Purged {deleted} memories (older than {days} days, salience &lt; {min_salience}).</magenta>'))
+                print_formatted_text(HTML(f' <magenta>* Purged {deleted} memories (older than {days} days, salience &lt; {min_salience}).</magenta>'), style=mnemos_style)
 
             elif cmd == 'menu':
                 sys.exit(100)
 
             elif cmd == 'help' or cmd == '?':
-                print_formatted_text(HTML(f'\n <magenta>--- MNEMOS COMMAND GUIDE ---</magenta>'))
-                print_formatted_text(HTML(f'  <ansiyellow>add &lt;entity&gt; &lt;aspect&gt; "text"</ansiyellow>'))
-                print_formatted_text(HTML(f'    <gray>Archive a key project fact, architectural decision, or user preference.</gray>'))
-                print_formatted_text(HTML(f'    <gray>Optional: --salience 1-10, --file path/to/file</gray>\n'))
-                print_formatted_text(HTML(f'  <ansiyellow>context &lt;entity&gt;</ansiyellow>'))
-                print_formatted_text(HTML(f'    <gray>Retrieve a dense shorthand briefing of project context for an AI.</gray>\n'))
-                print_formatted_text(HTML(f'  <ansiyellow>scratch "your plan"</ansiyellow>'))
-                print_formatted_text(HTML(f'    <gray>Update the active multi-step session plan for task continuity.</gray>\n'))
-                print_formatted_text(HTML(f'  <ansiyellow>file "path/to/file"</ansiyellow>'))
-                print_formatted_text(HTML(f'    <gray>Retrieve memories linked specifically to a code file.</gray>\n'))
-                print_formatted_text(HTML(f'  <ansiyellow>search "query"</ansiyellow>'))
-                print_formatted_text(HTML(f'    <gray>Find memories matching keywords using high-speed FTS5.</gray>\n'))
-                print_formatted_text(HTML(f'  <ansiyellow>list [entity]</ansiyellow>'))
-                print_formatted_text(HTML(f'    <gray>Browse all stored memories, optionally filtered by project.</gray>\n'))
-                print_formatted_text(HTML(f'  <ansiyellow>purge [--days N] [--min-salience N]</ansiyellow>'))
-                print_formatted_text(HTML(f'    <gray>Surgically clean old, low-salience memories from the DB.</gray>\n'))
-                print_formatted_text(HTML(f'  <ansiyellow>menu</ansiyellow>'))
-                print_formatted_text(HTML(f'    <gray>Return to the main mode selection screen.</gray>\n'))
-                print_formatted_text(HTML(f'  <error>exit</error> or <error>quit</error>'))
-                print_formatted_text(HTML(f'    <gray>Securely disconnect from the memory kernel.</gray>\n'))
+                print_formatted_text(HTML(f'\n <magenta>--- MNEMOS COMMAND GUIDE ---</magenta>'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>add &lt;entity&gt; &lt;aspect&gt; "text"</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Archive a key project fact, architectural decision, or user preference.</gray>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Optional: --salience 1-10, --file path/to/file</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>context &lt;entity&gt;</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Retrieve a dense shorthand briefing of project context for an AI.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>scratch "your plan"</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Update the active multi-step session plan for task continuity.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>file "path/to/file"</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Retrieve memories linked specifically to a code file.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>search "query"</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Find memories matching keywords using high-speed FTS5.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>list [entity]</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Browse all stored memories, optionally filtered by project.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>purge [--days N] [--min-salience N]</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Surgically clean old, low-salience memories from the DB.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>menu</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Return to the main mode selection screen.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <error>exit</error> or <error>quit</error>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Securely disconnect from the memory kernel.</gray>\n'), style=mnemos_style)
             
             else:
                 if cmd not in ['add', 'context', 'search', 'purge', 'scratch', 'file', 'menu', 'list']:
-                    print_formatted_text(HTML(f' <error>[!] Unknown command. Type "help" for info.</error>'))
+                    print_formatted_text(HTML(f' <error>[!] Unknown command. Type "help" for info.</error>'), style=mnemos_style)
                 else:
-                    print_formatted_text(HTML(f' <error>[!] Missing arguments for "{cmd}".</error>'))
+                    print_formatted_text(HTML(f' <error>[!] Missing arguments for "{cmd}".</error>'), style=mnemos_style)
 
         except KeyboardInterrupt:
             print("")
@@ -252,7 +250,7 @@ def main():
         except EOFError:
             break
         except Exception as e:
-            print_formatted_text(HTML(f' <error>[!] Error: {e}</error>'))
+            print_formatted_text(HTML(f' <error>[!] Error: {e}</error>'), style=mnemos_style)
 
 if __name__ == "__main__":
     main()
