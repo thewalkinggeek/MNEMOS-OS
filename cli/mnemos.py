@@ -87,7 +87,7 @@ def main():
             msg = f"Fact saved (ID: {row_id})"
             if args.file: msg += f" linked to {args.file}"
             if args.related: msg += f" related to ID:{args.related}"
-            print(f" {C_GRN}✔ {msg}{C_RST}")
+            print(f" {C_GRN}[+] {msg}{C_RST}")
     
     elif args.command == "projects":
         entities = mnemo.list_entities()
