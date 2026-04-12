@@ -67,14 +67,16 @@ MNEMOS-OS is engineered for industrial-scale development. In standard stress tes
 
 ## 🚀 Getting Started
 
-### **For Humans (Interactive CLI)**
-1. Navigate to the `MNEMOS` folder.
-2. Run **`mnemos.bat`** (Windows) or `./mnemos.sh` (Linux/macOS).
-
 ### **For AI Agents (MCP Server)**
 Point your AI tool to the main launcher with the `mcp` argument:
 *   `[PATH]/MNEMOS/mnemos.bat mcp` (Windows)
 *   `[PATH]/MNEMOS/mnemos.sh mcp` (Unix)
+
+**🤖 AI Briefing:** Simply say: *"Read `MNEMOS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my project."*
+
+### **For Humans (Interactive CLI)**
+1. Navigate to the `MNEMOS` folder.
+2. Run **`mnemos.bat`** (Windows) or `./mnemos.sh` (Linux/macOS).
 
 ---
 
