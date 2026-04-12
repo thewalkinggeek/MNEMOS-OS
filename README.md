@@ -163,7 +163,7 @@ claude mcp add mnemos-os "[PATH_TO_MNEMOS-OS]/mnemos.bat" mcp --scope user
 ![MNEMOS-OS CLI Screenshot](assets/img/mnemos-screenshot.png)
 
 
-*   `add <entity> <aspect> "<text>"`: Save a memory. Use your project name as the `<entity>` (e.g., `Ocelli`). Use `GLOBAL` for universal preferences. Supports optional `--salience 1-10`, `--file path`, and `--related id`.
+*   `add <entity> <aspect> "<text>"`: Save a memory. Use your project name as the `<entity>` (e.g., `MyProject`). Use `GLOBAL` for universal preferences. Supports optional `--salience 1-10`, `--file path`, and `--related id`.
 *   `details <id>`: **Hydrate** a shorthand memory into full reasoning and see relational links.
 *   `projects`: List all project entities (knowledge bases) in the system.
 *   `scratch "<plan>"`: Update the active session scratchpad for the current project.
@@ -226,6 +226,3 @@ Copyright © 2026 **Jonathan Schoenberger**
 Licensed under the **GNU General Public License v3.0 (GPLv3)**
 
 *"Memory is not just storage; it is architecture."*
-
-  <p><i>"Memory is not just storage; it is architecture."</i></p>
-</div>
