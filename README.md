@@ -5,7 +5,7 @@ MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented deve
 
 > <br>
 >
-> ### 🚀 New in v1.1.0
+> ### 🚀 New in v1.1.0 (The Cognition Update)
 > - 🧠 **Relational Memory:** Link decisions to form logic chains (`related_id`).
 > - 🔥 **Active Salience:** High-utility memories stay "hot" in the context window.
 > - 💧 **Memory Hydration:** Agents can "hydrate" shorthand into full reasoning.

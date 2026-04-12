@@ -1,0 +1,10 @@
+# 🏄 Windsurf-MNEMOS Protocol
+
+You are operating in a workspace powered by **MNEMOS-OS**. Your primary goal is to maintain session continuity and architectural integrity using the MÍMIR-DB.
+
+## 🛡️ Agent Directives
+- **Sync First:** Before starting any task, run `get_context()` for the current project entity to synchronize your state.
+- **Autonomous Memory:** Trigger `add_memory` for every Architectural Pivot (`ARCH`), Anti-Pattern (`ANTI`), or significant Technical Log (`LOG`). Do not wait for user prompts.
+- **Hydration Protocol:** Facts in your context include `[ID:n]`. If you lack the reasoning behind a decision, you MUST use `get_memory_details(ID)` to hydrate the memory.
+
+**Goal:** Zero Knowledge Loss across sessions.
