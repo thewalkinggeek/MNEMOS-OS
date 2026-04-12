@@ -100,7 +100,7 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
 
     # 2. Splash Header (Fixed tag names to match style keys)
-    print_formatted_text(HTML('\n 🧠  <branding>Mnemos-OS</branding> <version>v1.0.0</version>\n'), style=mnemos_style)
+    print_formatted_text(HTML('\n 🧠  <branding>Mnemos-OS</branding> <version>v1.1.0</version>\n'), style=mnemos_style)
     print_formatted_text(HTML(' <magenta>&gt;</magenta> <white><b>The Memory Kernel for AI</b></white>\n'), style=mnemos_style)
     print_formatted_text(HTML(' <gray>----------------------------------</gray>\n'), style=mnemos_style)
     

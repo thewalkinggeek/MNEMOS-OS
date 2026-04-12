@@ -10,9 +10,17 @@ CREATE TABLE IF NOT EXISTS knowledge (
     shorthand TEXT NOT NULL,
     raw_content TEXT,
     salience INTEGER DEFAULT 5,
+    usage_count INTEGER DEFAULT 0, -- Tracks how often this memory is hydrated
+    related_id INTEGER REFERENCES knowledge(id) ON DELETE SET NULL, -- Relational link
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_accessed DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- High-Speed Indexes for Performance scaling
+CREATE INDEX IF NOT EXISTS idx_knowledge_entity ON knowledge(entity);
+CREATE INDEX IF NOT EXISTS idx_knowledge_salience ON knowledge(salience);
+CREATE INDEX IF NOT EXISTS idx_knowledge_usage ON knowledge(usage_count);
+CREATE INDEX IF NOT EXISTS idx_knowledge_created ON knowledge(created_at);
 
 -- 2. Full-Text Search Virtual Table (FTS5)
 -- We use a standard FTS5 table for simplicity and reliability.
@@ -21,14 +29,15 @@ CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_search USING fts5(
     entity,
     aspect,
     shorthand,
+    raw_content,
     tokenize="unicode61" -- Supports better cross-language matching
 );
 
 -- 3. Triggers to keep the Search Index synchronized with the Core Table
 -- Since we are now using an internal-content FTS table, we manually sync.
 CREATE TRIGGER IF NOT EXISTS knowledge_ai AFTER INSERT ON knowledge BEGIN
-  INSERT INTO knowledge_search(rowid, entity, aspect, shorthand) 
-  VALUES (new.id, new.entity, new.aspect, new.shorthand);
+  INSERT INTO knowledge_search(rowid, entity, aspect, shorthand, raw_content) 
+  VALUES (new.id, new.entity, new.aspect, new.shorthand, new.raw_content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS knowledge_ad AFTER DELETE ON knowledge BEGIN
@@ -37,8 +46,8 @@ END;
 
 CREATE TRIGGER IF NOT EXISTS knowledge_au AFTER UPDATE ON knowledge BEGIN
   DELETE FROM knowledge_search WHERE rowid = old.id;
-  INSERT INTO knowledge_search(rowid, entity, aspect, shorthand) 
-  VALUES (new.id, new.entity, new.aspect, new.shorthand);
+  INSERT INTO knowledge_search(rowid, entity, aspect, shorthand, raw_content) 
+  VALUES (new.id, new.entity, new.aspect, new.shorthand, new.raw_content);
 END;
 
 -- 4. The Active Scratchpad (Session Continuity)

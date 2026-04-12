@@ -34,6 +34,7 @@ def main():
     add_parser.add_argument("text")
     add_parser.add_argument("--salience", type=int, default=5)
     add_parser.add_argument("--file")
+    add_parser.add_argument("--related", type=int, help="ID of a related memory")
 
     # 2. Get Context
     ctx_parser = subparsers.add_parser("context", help="Retrieve dense shorthand briefing for AI agents")
@@ -61,7 +62,11 @@ def main():
     purge_parser.add_argument("--days", type=int, default=30)
     purge_parser.add_argument("--min-salience", type=int, default=3)
 
-    # 8. Help
+    # 8. Details (Hydration)
+    details_parser = subparsers.add_parser("details", help="Hydrate a shorthand memory into full reasoning")
+    details_parser.add_argument("id", type=int)
+
+    # 9. Help
     help_parser = subparsers.add_parser("help", help="Show this help message and exit")
 
     args = parser.parse_args()
@@ -71,14 +76,32 @@ def main():
         sys.exit(0)
 
     if args.command == "add":
-        row_id = mnemo.add_fact(args.entity, args.aspect, args.text, args.salience, file_path=args.file)
+        row_id = mnemo.add_fact(args.entity, args.aspect, args.text, args.salience, file_path=args.file, related_id=args.related)
         if row_id == -1:
             print(f" {C_GRY}- Ignored by Salience Filter (too noisy/short){C_RST}")
         else:
             msg = f"Fact saved (ID: {row_id})"
             if args.file: msg += f" linked to {args.file}"
+            if args.related: msg += f" related to ID:{args.related}"
             print(f" {C_GRN}✔ {msg}{C_RST}")
     
+    elif args.command == "details":
+        d = mnemo.get_memory_details(args.id)
+        if not d:
+            print(f" {C_RED}- Memory ID {args.id} not found.{C_RST}")
+        else:
+            print(f" {C_MAG}--- MEMORY HYDRATION [ID: {args.id}] ---{C_RST}")
+            print(f" {C_BLD}ENTITY:{C_RST}  {d['entity']}")
+            print(f" {C_BLD}TYPE:{C_RST}    {d['aspect']}")
+            print(f" {C_BLD}CREATED:{C_RST} {d['created']}")
+            if d['related_id']:
+                print(f" {C_BLD}RELATED TO:{C_RST} [ID:{d['related_id']}] {d['related_shorthand']}")
+            print(f" {C_CYN}{'-' * 40}{C_RST}")
+            print(f" {C_BLD}SHORTHAND:{C_RST} {d['shorthand']}")
+            print(f" {C_YLW}--- RAW CONTENT ---{C_RST}")
+            print(f" {d['raw']}")
+            print(f" {C_MAG}{'-' * 40}{C_RST}\n")
+
     elif args.command == "context":
         ctx = mnemo.get_context(args.entity, limit=args.limit)
         print(f" {C_MAG}[ACTIVE MINDSET: {args.entity.upper()}]{C_RST}")

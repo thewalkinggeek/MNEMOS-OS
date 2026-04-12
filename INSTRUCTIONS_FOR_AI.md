@@ -9,8 +9,10 @@ You are interacting with a workspace that uses **MNEMOS-OS** for persistent, lon
 ## 🛠️ The Toolset
 You are connected via MCP. Use the following tools directly:
 
-*   **`get_context(entity)`**: Retrieves active mindset (Scratchpad + Recent shorthand facts).
-*   **`add_memory(entity, aspect, text, salience, file_path)`**: Saves a new fact.
+*   **`get_context(entity)`**: Retrieves active mindset (Scratchpad + Recent shorthand facts). Shorthand facts include an `[ID:n]`.
+*   **`get_memory_details(id)`**: **CRITICAL:** Use this to "hydrate" a shorthand fact. Fetches full reasoning, usage stats, and **related memory links**.
+*   **`add_memory(entity, aspect, text, salience, file_path, related_id)`**: Saves a new fact. Use `related_id` to link to a previous decision or error.
+*   **`list_entities()`**: Returns all known projects/entities. Use this to discover other "brains" you can query.
 *   **`update_scratchpad(plan)`**: Stores the current multi-step action plan for continuity.
 *   **`get_file_memory(file_path)`**: Retrieves memories linked specifically to a file.
 *   **`search_memory(query)`**: Performs a deep keyword search across all memories.
@@ -36,6 +38,16 @@ Do not wait for the user to ask you to "remember." You must autonomously trigger
 ### **4. File-Specific Context**
 *   **Trigger:** Making a significant change to a specific file.
 *   **Action:** `add_memory(ENTITY, "LOG", "...", file_path="path/to/file")`
+
+---
+
+## 💧 The Hydration Protocol
+You must not guess the meaning of ambiguous shorthand. If you see an `ARCH` or `ANTI` memory that directly impacts your current task, you **MUST** run `get_memory_details(ID)` before proceeding. This ensures your reasoning is grounded in the original intent, not a compressed headline.
+
+---
+
+## 🗺️ The Discovery Protocol
+If you are starting a task that seems "generic" or "cross-cutting" (e.g., setting up a new database or auth flow), run `list_entities()` to see what other projects exist. You may find high-utility lessons in other entities that haven't yet reached the "Global Heat" mix.
 
 ---
 

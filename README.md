@@ -2,17 +2,41 @@
 
 MNEMOS-OS is a high-performance memory kernel for AI-augmented development. It eliminates "AI Amnesia" by distilling complex developer sessions into high-density AAAK-Lite shorthand, providing surgical file-level context, mistake-prevention guardrails, and unbreakable task continuity via a persistent relational scratchpad.
 
-![Version](https://img.shields.io/badge/version-v1.0.0-cyan)
+
+> <br>
+>
+> ### 🚀 New in v1.1.0
+> - 🧠 **Relational Memory:** Link decisions to form logic chains (`related_id`).
+> - 🔥 **Active Salience:** High-utility memories stay "hot" in the context window.
+> - 💧 **Memory Hydration:** Agents can "hydrate" shorthand into full reasoning.
+> - 🗺️ **Discovery Protocol:** Query knowledge from across your entire workspace.
+>
+> <br>
+
+<br>
+
+![Version](https://img.shields.io/badge/version-v1.1.0-cyan)
 ![OS](https://img.shields.io/badge/OS-Windows%20%7C%20Linux%20%7C%20macOS-orange)
 ![Language](https://img.shields.io/badge/language-Python-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
----
+
+## 📦 Quick Installation
+
+```bash
+git clone https://github.com/thewalkinggeek/MNEMOS-OS.git && cd MNEMOS-OS
+```
+[![Download ZIP](https://img.shields.io/badge/Download-ZIP-orange?style=for-the-badge&logo=github)](https://github.com/thewalkinggeek/MNEMOS-OS/archive/refs/heads/main.zip)
+
+<br>
 
 ## ✨ Key Features
 
 ### 💎 AAAK-Lite Compression
 MNEMOS compresses your logs into a high-density dialect natively readable by LLMs but taking up **90% fewer tokens**. 1,000 words become 50 tokens of "Fact-Shorthand."
+
+### 🧠 Cognitive Intelligence
+MNEMOS evolves with you. It uses **Active Salience** to keep high-utility memories "hot," **Memory Hydration** to expand shorthand on-demand, and **Relational Linking** to trace reasoning across complex logic chains.
 
 ### 🏛️ MÍMIR-DB 
 Powered by **SQLite 3 with FTS5**, MNEMOS provides near-instant context retrieval using relational logic and decay-based priority.
@@ -29,7 +53,7 @@ Ensures session continuity by storing active multi-step plans. You can also link
 ### ⚡ High-Velocity Interactive CLI
 A text-based terminal with **Ghost Suggestions**, **Tab Completion**, and **Command History**.
 
----
+<br>
 
 ## 📈 Performance Benchmarks
 MNEMOS-OS is engineered for industrial-scale development. In standard stress tests (1,000+ facts):
@@ -39,7 +63,7 @@ MNEMOS-OS is engineered for industrial-scale development. In standard stress tes
 *   **Token Density:** Up to **30x compression** for complex architectural logs.
 *   **Storage Efficiency:** ~8,500 tokens saved per 1,000 memories.
 
----
+<br>
 
 ## 🚀 Getting Started
 
@@ -136,16 +160,17 @@ claude mcp add mnemos "[PATH_TO_MNEMOS]/mnemos.bat" mcp --scope user
 ![MNEMOS-OS CLI Screenshot](assets/img/mnemos-screenshot.png)
 
 
-*   `add <entity> <aspect> "<text>"`: Save a memory. Use your project name as the `<entity>` (e.g., `Ocelli`). Use `GLOBAL` for universal preferences. Supports optional `--salience 1-10` and `--file path`.
+*   `add <entity> <aspect> "<text>"`: Save a memory. Use your project name as the `<entity>` (e.g., `Ocelli`). Use `GLOBAL` for universal preferences. Supports optional `--salience 1-10`, `--file path`, and `--related id`.
+*   `details <id>`: **Hydrate** a shorthand memory into full reasoning and see relational links.
 *   `scratch "<plan>"`: Update the active session scratchpad for the current project.
-*   `file "<path>"`: Retrieve memories linked to a specific file.
+*   `file "<path>"`: Retrieve memories linked to a specific file (including parent directory context).
 *   `context <entity>`: Retrieve the active mindset (blends project facts + global preferences).
-*   `search "<query>"`: Fast keyword search across all memories.
-*   `list [entity]`: List all memories, optionally filtered by entity.
+*   `search "<query>"`: Fast keyword search across all memories and raw content (FTS5).
+*   `list [entity]`: List all memories or all known project entities.
 *   `menu`: Return to the main selection screen.
 *   `purge [--days N] [--min-salience N]`: Tunable cleanup of stale memories.
 
----
+<br>
 
 ## 💡 Usage Tips
 
@@ -162,7 +187,20 @@ claude mcp add mnemos "[PATH_TO_MNEMOS]/mnemos.bat" mcp --scope user
 ### **🤖 AI Briefing**
 Simply say: *"Read `MNEMOS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my project."*
 
----
+<br>
+
+## 🗣️ The AAAK-Lite Syntax
+
+| Prefix | Category | Meaning | Example |
+| :--- | :--- | :--- | :--- |
+| `*` | **PREF** | User Preferences | `*vCSS_modular` |
+| `!` | **BUG** | Critical Issues | `!GCal_403_err` |
+| `?` | **ARCH** | Structural Decisions | `?sqlite_fts5_triggers` |
+| `@` | **DEP** | External Dependencies | `@python_sqlite3` |
+| `~` | **ANTI** | Mistakes/Guardrails | `~no_setInterval` |
+| `>` | **LOG** | General Progress | `>core_logic_done` |
+
+<br>
 
 ## 🗣️ The AAAK-Lite Syntax
 
@@ -187,7 +225,7 @@ Simply say: *"Read `MNEMOS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my proj
 └── data/               # MÍMIR-DB (SQLite)
 ```
 
----
+<br>
 
 ## 📄 License & Copyright
 Copyright © 2026 **Jonathan Schoenberger**.  

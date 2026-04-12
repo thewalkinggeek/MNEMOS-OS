@@ -47,7 +47,7 @@ class MnemosCore:
                 conn.commit()
 
 
-    def add_fact(self, entity, aspect, raw_text, salience=5, file_path=None):
+    def add_fact(self, entity, aspect, raw_text, salience=5, file_path=None, related_id=None):
         """Compresses and saves a fact to the Mimir-DB."""
         # Salience Filter: Discard noisy text
         if len(raw_text.strip()) < 3 or raw_text.lower().strip() in ["hello", "thanks", "ok", "yes", "no"]:
@@ -58,9 +58,9 @@ class MnemosCore:
         with self._get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO knowledge (entity, aspect, shorthand, raw_content, salience)
-                VALUES (?, ?, ?, ?, ?)
-            """, (entity.upper(), aspect.upper(), shorthand, raw_text, salience))
+                INSERT INTO knowledge (entity, aspect, shorthand, raw_content, salience, related_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (entity.upper(), aspect.upper(), shorthand, raw_text, salience, related_id))
             row_id = cursor.lastrowid
             
             # Link to file if provided
@@ -74,7 +74,7 @@ class MnemosCore:
             return row_id
 
     def distill(self, aspect, text):
-        """High-density AAAK-Lite Distillation (90% reduction target)."""
+        """AAAK-Lite Distillation (15-word limit for better nuance preservation)."""
         prefixes = {"PREF": "*", "BUG": "!", "ARCH": "?", "DEP": "@", "LOG": ">", "ANTI": "~"}
         prefix = prefixes.get(aspect.upper(), "~")
         
@@ -98,64 +98,136 @@ class MnemosCore:
             compressed_words.append(mapping.get(w, w))
             
         # Join with minimal separators and limit length
-        shorthand = "_".join(compressed_words[:10])
+        shorthand = "_".join(compressed_words[:15])
         return f"{prefix}{shorthand}"
 
 
+    def get_memory_details(self, memory_id):
+        """Retrieves full content and increments usage_count (Active Salience)."""
+        with self._get_conn() as conn:
+            cursor = conn.cursor()
+            # Increment usage_count first
+            cursor.execute("UPDATE knowledge SET usage_count = usage_count + 1 WHERE id = ?", (memory_id,))
+            
+            # Sub-query to get related memory shorthand if it exists
+            cursor.execute("""
+                SELECT k.entity, k.aspect, k.shorthand, k.raw_content, k.salience, k.usage_count, 
+                       k.created_at, k.last_accessed, k.related_id, r.shorthand as related_shorthand
+                FROM knowledge k
+                LEFT JOIN knowledge r ON k.related_id = r.id
+                WHERE k.id = ?
+            """, (memory_id,))
+            row = cursor.fetchone()
+            if row:
+                conn.commit()
+                return {
+                    "entity": row[0], "aspect": row[1], "shorthand": row[2], 
+                    "raw": row[3], "salience": row[4], "usage": row[5], 
+                    "created": row[6], "last_accessed": row[7],
+                    "related_id": row[8], "related_shorthand": row[9]
+                }
+            return None
+
     def get_context(self, entity, limit=15, include_scratchpad=True):
-        """Assembles the most relevant shorthand facts for the AI's context window.
-        Uses Temporal Weighting: Priority = (Salience * 10) - AgeInDays
+        """Assembles context with Active Salience and Cross-Project Intelligence.
+        Safety Guarantee: Salience 9+ (ARCH/ANTI) does not decay with age.
         """
         context_parts = []
+        entity = entity.upper()
         
         with self._get_conn() as conn:
             cursor = conn.cursor()
             
-            # 1. Get Scratchpad first if requested
+            # 1. Get Scratchpad
             if include_scratchpad:
                 cursor.execute("SELECT content FROM scratchpad WHERE id = 1")
                 row = cursor.fetchone()
                 if row:
                     context_parts.append(f"[SCRATCHPAD] {row[0]}")
 
-            # 2. Calculate dynamic priority based on individual record timestamps
+            # 2. Local & Global Context Mix
+            # Priority Logic: 
+            # - If Salience >= 9: (Salience * 10) + (Usage * 2)  [NO AGE DECAY]
+            # - If Salience < 9:  (Salience * 10) + (Usage * 2) - AgeInDays
             cursor.execute("""
-                SELECT id, shorthand, 
-                       ((salience * 10) - (julianday('now') - julianday(created_at))) as priority
-                FROM knowledge 
-                WHERE entity = ? OR entity = 'GLOBAL'
-                ORDER BY priority DESC
+                SELECT id, entity, shorthand, raw_content, salience, priority FROM (
+                    WITH ranked_knowledge AS (
+                        SELECT id, entity, shorthand, raw_content, salience, usage_count,
+                            CASE 
+                                    WHEN salience >= 9 THEN (salience * 10) + (usage_count * 2)
+                                    ELSE (salience * 10) + (usage_count * 2) - (julianday('now') - julianday(created_at))
+                            END as priority
+                        FROM knowledge
+                    )
+                    SELECT id, entity, shorthand, raw_content, salience, priority, 1 as is_local FROM ranked_knowledge 
+                    WHERE entity = ? OR entity = 'GLOBAL'
+                    
+                    UNION ALL
+                    
+                    -- High-Utility Cross-Entity 'Heat'
+                    SELECT id, entity, shorthand, raw_content, salience, priority, 0 as is_local FROM (
+                        SELECT * FROM ranked_knowledge 
+                        WHERE entity != ? AND entity != 'GLOBAL' AND usage_count > 0
+                        ORDER BY usage_count DESC LIMIT 3
+                    )
+                )
+                ORDER BY is_local DESC, priority DESC
                 LIMIT ?
-            """, (entity.upper(), limit))
+            """, (entity, entity, limit))
             
             rows = cursor.fetchall()
             if rows:
-                facts = [row[1] for row in rows]
-                ids = [row[0] for row in rows]
+                facts = []
+                for row in rows:
+                    mem_id, ent, shorthand, raw, salience = row[0], row[1], row[2], row[3], row[4]
+                    prefix = f"[{ent}] " if ent != entity else ""
+                    if salience >= 9:
+                        facts.append(f"{prefix}{shorthand} [ID:{mem_id}] (FULL: {raw})")
+                    else:
+                        facts.append(f"{prefix}{shorthand} [ID:{mem_id}]")
+                
                 context_parts.append(" | ".join(facts))
-
-                # Update last_accessed ONLY for facts being injected into context
+                
+                ids = [row[0] for row in rows]
                 placeholders = ','.join(['?'] * len(ids))
-                cursor.execute(f"""
-                    UPDATE knowledge SET last_accessed = CURRENT_TIMESTAMP 
-                    WHERE id IN ({placeholders})
-                """, ids)
+                cursor.execute(f"UPDATE knowledge SET last_accessed = CURRENT_TIMESTAMP WHERE id IN ({placeholders})", ids)
                 conn.commit()
             
             return "\n".join(context_parts) if context_parts else "No prior context found."
 
     def get_file_context(self, file_path):
-        """Retrieves memories specifically linked to a file path."""
+        """Retrieves memories linked to this file or any of its parent directories."""
+        # Normalize path
+        target_path = file_path.replace("\\", "/").lower()
+        parts = target_path.split("/")
+        
+        # Build list of potential parent paths: ["src/auth/login.py", "src/auth", "src", ""]
+        prefixes = [target_path]
+        for i in range(1, len(parts)):
+            prefixes.append("/".join(parts[:-i]))
+            
         with self._get_conn() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            placeholders = ",".join(["?"] * len(prefixes))
+            # Match exact prefixes OR patterns like "%login.py"
+            cursor.execute(f"""
                 SELECT k.shorthand FROM knowledge k
                 JOIN file_links fl ON k.id = fl.knowledge_id
-                WHERE fl.file_path = ? OR fl.file_path LIKE ?
+                WHERE LOWER(fl.file_path) IN ({placeholders})
+                OR ? LIKE '%' || LOWER(fl.file_path)
                 ORDER BY k.salience DESC, k.created_at DESC
-            """, (file_path, f"%{file_path}"))
+            """, (*prefixes, target_path))
             facts = [row[0] for row in cursor.fetchall()]
-            return " | ".join(facts) if facts else ""
+            # Use a set to remove duplicates if multiple patterns match
+            return " | ".join(list(dict.fromkeys(facts))) if facts else ""
+
+    def list_entities(self):
+        """Returns a list of all unique entities (projects) in the database."""
+        with self._get_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT entity FROM knowledge ORDER BY entity ASC")
+            return [row[0] for row in cursor.fetchall()]
+
 
     def update_scratchpad(self, content):
         """Updates the persistent session scratchpad."""
