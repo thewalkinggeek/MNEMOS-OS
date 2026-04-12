@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.engine import MnemosCore
 
 # Initialize FastMCP server
-mcp = FastMCP("MNEMOS")
+mcp = FastMCP("MNEMOS-OS")
 core = MnemosCore()
 
 @mcp.tool()

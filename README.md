@@ -88,16 +88,16 @@ Point your AI tool to the main launcher with the `mcp` argument:
 
 Run this command to register globally:
 ```bash
-gemini mcp add mnemos python "[PATH_TO_MNEMOS]/cli/mcp_server.py" --scope user --trust
+gemini mcp add mnemos-os python "[PATH_TO_MNEMOS-OS]/cli/mcp_server.py" --scope user --trust
 ```
 Or manually edit `%USERPROFILE%\.gemini\settings.json`:
 ```json
 {
   "mcpServers": {
-    "mnemos": {
+    "mnemos-os": {
       "command": "python",
-      "args": ["[PATH_TO_MNEMOS]/cli/mcp_server.py"],
-      "env": { "PYTHONPATH": "[PATH_TO_MNEMOS]" }
+      "args": ["[PATH_TO_MNEMOS-OS]/cli/mcp_server.py"],
+      "env": { "PYTHONPATH": "[PATH_TO_MNEMOS-OS]" }
     }
   }
 }
@@ -111,10 +111,10 @@ Add to `%APPDATA%\Claude\claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "mnemos": {
+    "mnemos-os": {
       "command": "python",
-      "args": ["[PATH_TO_MNEMOS]/cli/mcp_server.py"],
-      "env": { "PYTHONPATH": "[PATH_TO_MNEMOS]" }
+      "args": ["[PATH_TO_MNEMOS-OS]/cli/mcp_server.py"],
+      "env": { "PYTHONPATH": "[PATH_TO_MNEMOS-OS]" }
     }
   }
 }
@@ -125,7 +125,7 @@ Add to `%APPDATA%\Claude\claude_desktop_config.json`:
 <summary><b>🐚 Claude Code (CLI)</b></summary>
 
 ```bash
-claude mcp add mnemos "[PATH_TO_MNEMOS]/mnemos.bat" mcp --scope user
+claude mcp add mnemos-os "[PATH_TO_MNEMOS-OS]/mnemos.bat" mcp --scope user
 ```
 </details>
 
@@ -134,9 +134,9 @@ claude mcp add mnemos "[PATH_TO_MNEMOS]/mnemos.bat" mcp --scope user
 
 1. Open **Cursor Settings** (`Ctrl + Shift + J`) > **Features** > **MCP**.
 2. **Add new MCP server**:
-   - **Name:** `MNEMOS`
+   - **Name:** `MNEMOS-OS`
    - **Type:** `command`
-   - **Command:** `[PATH_TO_MNEMOS]/mnemos.bat mcp`
+   - **Command:** `[PATH_TO_MNEMOS-OS]/mnemos.bat mcp`
 </details>
 
 <details>
@@ -147,8 +147,8 @@ claude mcp add mnemos "[PATH_TO_MNEMOS]/mnemos.bat" mcp --scope user
 ```json
 {
   "mcpServers": {
-    "mnemos": {
-      "command": "[PATH_TO_MNEMOS]/mnemos.bat",
+    "mnemos-os": {
+      "command": "[PATH_TO_MNEMOS-OS]/mnemos.bat",
       "args": ["mcp"]
     }
   }
