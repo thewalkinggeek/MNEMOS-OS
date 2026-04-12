@@ -21,8 +21,9 @@ You are connected via MCP. Use the following tools directly:
 
 ## 🧠 The "Briefing" Protocol
 At the start of every new session or project switch, you **MUST**:
-1.  **Load Identity:** Run `get_context("GLOBAL")`. 
+1.  **Load Identity:** Run `get_context("CORE")`. 
     *   *First-Run:* If no `usr_name` is found, briefly introduce yourself: *"Welcome to MNEMOS-OS. I'm ready to assist—what should I call you?"*
+    *   *Environment Sync:* On your first interaction with a new user, detect their OS/environment from the session context and save it (e.g., `add_memory("CORE", "PREF", "Dev platform is [OS]", salience=8)`).
     *   *Greeting:* Once known, use the user's name in your initial briefing (e.g., *"Context loaded. Welcome back, Jon."*).
 2.  **Load Project:** Run `get_context(CURRENT_PROJECT)`.
 3.  **Synthesize:** Brief the user on the active plan and recent relevant facts before responding.
