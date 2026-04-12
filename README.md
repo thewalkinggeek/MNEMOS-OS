@@ -222,9 +222,10 @@ claude mcp add mnemos-os "[PATH_TO_MNEMOS-OS]/mnemos.bat" mcp --scope user
 
 ## 📄 License & Copyright
 
-<div align="center">
-  <p>Copyright © 2026 <b>Jonathan Schoenberger</b></p>
-  <p>Licensed under the <b>GNU General Public License v3.0 (GPLv3)</b></p>
-  <br>
+Copyright © 2026 **Jonathan Schoenberger**
+Licensed under the **GNU General Public License v3.0 (GPLv3)**
+
+*"Memory is not just storage; it is architecture."*
+
   <p><i>"Memory is not just storage; it is architecture."</i></p>
 </div>
