@@ -200,19 +200,6 @@ Simply say: *"Read `MNEMOS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my proj
 | `~` | **ANTI** | Mistakes/Guardrails | `~no_setInterval` |
 | `>` | **LOG** | General Progress | `>core_logic_done` |
 
-<br>
-
-## 🗣️ The AAAK-Lite Syntax
-
-| Prefix | Category | Meaning | Example |
-| :--- | :--- | :--- | :--- |
-| `*` | **PREF** | User Preferences | `*vCSS_modular` |
-| `!` | **BUG** | Critical Issues | `!GCal_403_err` |
-| `?` | **ARCH** | Structural Decisions | `?sqlite_fts5_triggers` |
-| `@` | **DEP** | External Dependencies | `@python_sqlite3` |
-| `~` | **ANTI** | Mistakes/Guardrails | `~no_setInterval` |
-| `>` | **LOG** | General Progress | `>core_logic_done` |
-
 ---
 
 ## 📂 Project Architecture
