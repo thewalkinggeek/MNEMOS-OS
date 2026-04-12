@@ -131,19 +131,6 @@ claude mcp add mnemos "[PATH_TO_MNEMOS]/mnemos.bat" mcp --scope user
 
 ---
 
-## 🗣️ The AAAK-Lite Syntax
-
-| Prefix | Category | Meaning | Example |
-| :--- | :--- | :--- | :--- |
-| `*` | **PREF** | User Preferences | `*vCSS_modular` |
-| `!` | **BUG** | Critical Issues | `!GCal_403_err` |
-| `?` | **ARCH** | Structural Decisions | `?sqlite_fts5_triggers` |
-| `@` | **DEP** | External Dependencies | `@python_sqlite3` |
-| `~` | **ANTI** | Mistakes/Guardrails | `~no_setInterval` |
-| `>` | **LOG** | General Progress | `>core_logic_done` |
-
----
-
 ## 🛠️ CLI Command Reference
 
 ![MNEMOS-OS CLI Screenshot](assets/img/mnemos-screenshot.png)
@@ -174,6 +161,19 @@ claude mcp add mnemos "[PATH_TO_MNEMOS]/mnemos.bat" mcp --scope user
 
 ### **🤖 AI Briefing**
 Simply say: *"Read `MNEMOS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my project."*
+
+---
+
+## 🗣️ The AAAK-Lite Syntax
+
+| Prefix | Category | Meaning | Example |
+| :--- | :--- | :--- | :--- |
+| `*` | **PREF** | User Preferences | `*vCSS_modular` |
+| `!` | **BUG** | Critical Issues | `!GCal_403_err` |
+| `?` | **ARCH** | Structural Decisions | `?sqlite_fts5_triggers` |
+| `@` | **DEP** | External Dependencies | `@python_sqlite3` |
+| `~` | **ANTI** | Mistakes/Guardrails | `~no_setInterval` |
+| `>` | **LOG** | General Progress | `>core_logic_done` |
 
 ---
 
