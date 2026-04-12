@@ -171,7 +171,7 @@ def main():
                     print_formatted_text(HTML(f' <b>TYPE:</b>    {d["aspect"]}'), style=mnemos_style)
                     print_formatted_text(HTML(f' <b>CREATED:</b> {d["created"]}'), style=mnemos_style)
                     if d['related_id']:
-                        print_formatted_text(HTML(f' <b>RELATED:</b> [ID:{d["related_id"]}] {d['related_shorthand']}'), style=mnemos_style)
+                        print_formatted_text(HTML(f" <b>RELATED:</b> [ID:{d['related_id']}] {d['related_shorthand']}"), style=mnemos_style)
                     print_formatted_text(HTML(f' <gray>{"-" * 40}</gray>'), style=mnemos_style)
                     print_formatted_text(HTML(f' <b>SHORTHAND:</b> {d["shorthand"]}'), style=mnemos_style)
                     print_formatted_text(HTML(f' <yellow>--- RAW CONTENT ---</yellow>'), style=mnemos_style)
