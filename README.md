@@ -1,5 +1,8 @@
 ![MNEMOS-OS Header](assets/img/mnemos-os.png)
 
+> **The Problem:** Most AI memory systems are heavy, cloud-dependent, or cluttered with conversational noise.  
+> **The Solution:** **MNEMOS-OS** was built to be local-first, lightning-fast, and contextually efficient. By distilling complex developer sessions into high-density AAAK-Lite shorthand, it provides surgical context without bloating the context window, sacrificing privacy, or requiring a network round-trip.
+
 MNEMOS-OS is a high-performance memory kernel for AI-augmented development. It eliminates "AI Amnesia" by distilling complex developer sessions into high-density AAAK-Lite shorthand, providing surgical file-level context, mistake-prevention guardrails, and unbreakable task continuity via a persistent relational scratchpad.
 
 
