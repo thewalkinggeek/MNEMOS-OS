@@ -18,13 +18,14 @@ MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented deve
 ![Version](https://img.shields.io/badge/version-v1.1.0-cyan)
 ![OS](https://img.shields.io/badge/OS-Windows%20%7C%20Linux%20%7C%20macOS-orange)
 ![Language](https://img.shields.io/badge/language-Python-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 
 ## 📦 Quick Installation
 
 ```bash
-git clone https://github.com/thewalkinggeek/MNEMOS-OS.git && cd MNEMOS-OS
+git clone https://github.com/thewalkinggeek/MNEMOS-OS.git
+cd MNEMOS-OS
 ```
 [![Download ZIP](https://img.shields.io/badge/Download-ZIP-orange?style=for-the-badge&logo=github)](https://github.com/thewalkinggeek/MNEMOS-OS/archive/refs/heads/main.zip)
 
@@ -69,13 +70,13 @@ MNEMOS-OS is engineered for industrial-scale development. In standard stress tes
 
 ### **For AI Agents (MCP Server)**
 Point your AI tool to the main launcher with the `mcp` argument:
-*   `[PATH]/MNEMOS/mnemos.bat mcp` (Windows)
-*   `[PATH]/MNEMOS/mnemos.sh mcp` (Unix)
+*   `[PATH]/MNEMOS-OS/mnemos.bat mcp` (Windows)
+*   `[PATH]/MNEMOS-OS/mnemos.sh mcp` (Unix)
 
-**🤖 AI Briefing:** Simply say: *"Read `MNEMOS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my project."*
+**🤖 AI Briefing:** Simply say: *"Read `MNEMOS-OS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my project."*
 
 ### **For Humans (Interactive CLI)**
-1. Navigate to the `MNEMOS` folder.
+1. Navigate to the `MNEMOS-OS` folder.
 2. Run **`mnemos.bat`** (Windows) or `./mnemos.sh` (Linux/macOS).
 
 ---
@@ -164,6 +165,7 @@ claude mcp add mnemos "[PATH_TO_MNEMOS]/mnemos.bat" mcp --scope user
 
 *   `add <entity> <aspect> "<text>"`: Save a memory. Use your project name as the `<entity>` (e.g., `Ocelli`). Use `GLOBAL` for universal preferences. Supports optional `--salience 1-10`, `--file path`, and `--related id`.
 *   `details <id>`: **Hydrate** a shorthand memory into full reasoning and see relational links.
+*   `projects`: List all project entities (knowledge bases) in the system.
 *   `scratch "<plan>"`: Update the active session scratchpad for the current project.
 *   `file "<path>"`: Retrieve memories linked to a specific file (including parent directory context).
 *   `context <entity>`: Retrieve the active mindset (blends project facts + global preferences).
@@ -186,9 +188,6 @@ claude mcp add mnemos "[PATH_TO_MNEMOS]/mnemos.bat" mcp --scope user
 *   **Continuity:** Use the `scratch` command before starting complex tasks so your AI never loses the plan.
 *   **Surgical Context:** Use `--file [path]` when adding facts to link them directly to a specific code file.
 
-### **🤖 AI Briefing**
-Simply say: *"Read `MNEMOS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my project."*
-
 <br>
 
 ## 🗣️ The AAAK-Lite Syntax
@@ -206,9 +205,12 @@ Simply say: *"Read `MNEMOS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my proj
 
 ## 📂 Project Architecture
 ```text
-/MNEMOS/
-├── README.md           # Visual Guide
-├── INSTRUCTIONS_FOR_AI # AI Contract
+/MNEMOS-OS/
+├── .cursorrules        # IDE Protocol (Cursor)
+├── .windsurfrules      # IDE Protocol (Windsurf)
+├── .clinerules         # IDE Protocol (Cline/Roo)
+├── GEMINI.md           # CLI Protocol (Gemini)
+├── INSTRUCTIONS_FOR_AI # Core Memory Mandates
 ├── cli/                # Terminal & MCP Server
 ├── core/               # Compression & Logic
 └── data/               # MÍMIR-DB (SQLite)
@@ -216,8 +218,13 @@ Simply say: *"Read `MNEMOS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my proj
 
 <br>
 
-## 📄 License & Copyright
-Copyright © 2026 **Jonathan Schoenberger**.  
-Licensed under the **MIT License**.
+<br>
 
-**MNEMOS-OS: Memory is not just storage; it is architecture.**
+## 📄 License & Copyright
+
+<div align="center">
+  <p>Copyright © 2026 <b>Jonathan Schoenberger</b></p>
+  <p>Licensed under the <b>GNU General Public License v3.0 (GPLv3)</b></p>
+  <br>
+  <p><i>"Memory is not just storage; it is architecture."</i></p>
+</div>

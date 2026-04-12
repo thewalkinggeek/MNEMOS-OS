@@ -1,6 +1,7 @@
 # MNEMOS-OS Interactive Terminal
 # Copyright (c) 2026 Jonathan Schoenberger
-# Licensed under the MIT License
+# Licensed under the GNU General Public License v3.0 (GPLv3)
+# See LICENSE file for full license text.
 
 import sys
 import os
@@ -41,10 +42,12 @@ mnemos_style = Style.from_dict({
 
 class MnemosCompleter(Completer):
     def __init__(self):
-        self.commands = ['add', 'context', 'scratch', 'file', 'list', 'search', 'purge', 'exit', 'help', 'menu']
+        self.commands = ['add', 'context', 'scratch', 'file', 'list', 'search', 'purge', 'exit', 'help', 'menu', 'details', 'projects']
         self.aspects = ['PREF', 'BUG', 'ARCH', 'DEP', 'LOG', 'ANTI']
         self.examples = {
             'add': 'Archive a project fact, decision, or preference',
+            'details': 'Hydrate a shorthand memory into full reasoning',
+            'projects': 'List all project entities in the database',
             'context': 'Retrieve dense shorthand briefing for AI agents',
             'scratch': 'Set an active multi-step session plan',
             'file': 'Get context specifically for a code file',
@@ -136,21 +139,52 @@ def main():
 
             if cmd == 'add' and len(args) >= 4:
                 entity, aspect, text = args[1], args[2].upper(), args[3]
-                salience, file_path = 5, None
+                salience, file_path, related_id = 5, None, None
                 if '--salience' in args:
                     try: salience = int(args[args.index('--salience')+1])
                     except: pass
                 if '--file' in args:
                     try: file_path = args[args.index('--file')+1]
                     except: pass
+                if '--related' in args:
+                    try: related_id = int(args[args.index('--related')+1])
+                    except: pass
                 
-                row_id = mnemo.add_fact(entity, aspect, text, salience, file_path=file_path)
+                row_id = mnemo.add_fact(entity, aspect, text, salience, file_path=file_path, related_id=related_id)
                 if row_id == -1:
                     print_formatted_text(HTML(' <gray>- Ignored (Salience Filter)</gray>'), style=mnemos_style)
                 else:
                     msg = f"Fact saved (ID: {row_id})"
                     if file_path: msg += f" linked to {file_path}"
+                    if related_id: msg += f" related to ID:{related_id}"
                     print_formatted_text(HTML(f' <success>* {msg}</success>'), style=mnemos_style)
+
+            elif cmd == 'details' and len(args) >= 2:
+                try: mem_id = int(args[1])
+                except: continue
+                d = mnemo.get_memory_details(mem_id)
+                if not d:
+                    print_formatted_text(HTML(f' <error>- Memory ID {mem_id} not found.</error>'), style=mnemos_style)
+                else:
+                    print_formatted_text(HTML(f'\n <magenta>--- MEMORY HYDRATION [ID: {mem_id}] ---</magenta>'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <b>ENTITY:</b>  {d["entity"]}'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <b>TYPE:</b>    {d["aspect"]}'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <b>CREATED:</b> {d["created"]}'), style=mnemos_style)
+                    if d['related_id']:
+                        print_formatted_text(HTML(f' <b>RELATED:</b> [ID:{d["related_id"]}] {d['related_shorthand']}'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <gray>{"-" * 40}</gray>'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <b>SHORTHAND:</b> {d["shorthand"]}'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <yellow>--- RAW CONTENT ---</yellow>'), style=mnemos_style)
+                    print_formatted_text(HTML(f' {d["raw"]}'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <magenta>{"-" * 40}</magenta>\n'), style=mnemos_style)
+
+            elif cmd == 'projects':
+                entities = mnemo.list_entities()
+                if not entities:
+                    print_formatted_text(HTML(' <error>- No project entities found.</error>'), style=mnemos_style)
+                else:
+                    print_formatted_text(HTML(f'\n <cyan>KNOWN PROJECT ENTITIES:</cyan>'), style=mnemos_style)
+                    print_formatted_text(HTML(f' <magenta>{", ".join(entities)}</magenta>\n'), style=mnemos_style)
 
             elif cmd == 'scratch' and len(args) >= 2:
                 mnemo.update_scratchpad(args[1])
@@ -220,7 +254,11 @@ def main():
                 print_formatted_text(HTML(f'\n <magenta>--- MNEMOS COMMAND GUIDE ---</magenta>'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>add &lt;entity&gt; &lt;aspect&gt; "text"</yellow>'), style=mnemos_style)
                 print_formatted_text(HTML(f'    <gray>Archive a key project fact, architectural decision, or user preference.</gray>'), style=mnemos_style)
-                print_formatted_text(HTML(f'    <gray>Optional: --salience 1-10, --file path/to/file</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Optional: --salience 1-10, --file path, --related ID</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>details &lt;ID&gt;</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Hydrate a shorthand memory into full reasoning and see logic links.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>projects</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>List all project entities (knowledge bases) in the system.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>context &lt;entity&gt;</yellow>'), style=mnemos_style)
                 print_formatted_text(HTML(f'    <gray>Retrieve a dense shorthand briefing of project context for an AI.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>scratch "your plan"</yellow>'), style=mnemos_style)

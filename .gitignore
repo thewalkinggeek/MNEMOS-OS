@@ -4,3 +4,13 @@ __pycache__/
 data/mnemos.db
 data/.history
 .DS_Store
+
+# Local Test DBs
+*.db
+!data/mnemos.db
+
+# Local Tooling
+manage_mnemos.bat
+
+# Benchmark Scripts (Internal)
+scripts/

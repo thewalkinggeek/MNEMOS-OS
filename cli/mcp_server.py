@@ -1,6 +1,7 @@
 # MNEMOS-OS MCP Server
 # Copyright (c) 2026 Jonathan Schoenberger
-# Licensed under the MIT License
+# Licensed under the GNU General Public License v3.0 (GPLv3)
+# See LICENSE file for full license text.
 
 import asyncio
 import sys

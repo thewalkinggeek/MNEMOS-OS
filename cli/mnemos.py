@@ -1,6 +1,7 @@
 # MNEMOS-OS Script Interface (Non-Interactive)
 # Copyright © 2026 Jonathan Schoenberger
-# Licensed under the MIT License
+# Licensed under the GNU General Public License v3.0 (GPLv3)
+# See LICENSE file for full license text.
 
 import sys
 import os
@@ -66,7 +67,10 @@ def main():
     details_parser = subparsers.add_parser("details", help="Hydrate a shorthand memory into full reasoning")
     details_parser.add_argument("id", type=int)
 
-    # 9. Help
+    # 9. Projects (Discovery)
+    subparsers.add_parser("projects", help="List all project entities in the database")
+
+    # 10. Help
     help_parser = subparsers.add_parser("help", help="Show this help message and exit")
 
     args = parser.parse_args()
@@ -85,6 +89,14 @@ def main():
             if args.related: msg += f" related to ID:{args.related}"
             print(f" {C_GRN}✔ {msg}{C_RST}")
     
+    elif args.command == "projects":
+        entities = mnemo.list_entities()
+        if not entities:
+            print(f" {C_RED}- No project entities found.{C_RST}")
+        else:
+            print(f" {C_CYN}KNOWN PROJECT ENTITIES:{C_RST}")
+            print(f" {C_MAG}{', '.join(entities)}{C_RST}\n")
+
     elif args.command == "details":
         d = mnemo.get_memory_details(args.id)
         if not d:
