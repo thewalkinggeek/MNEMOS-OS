@@ -3,8 +3,9 @@
 When operating in this workspace, you are required to use the **MNEMOS-OS** memory kernel.
 
 ## ⚡ Agent Mandates
-- **Brief Yourself:** Upon opening this project, read `INSTRUCTIONS_FOR_AI.md` and `get_context()` for the current project entity.
-- **Save Memories:** Autonomously use the `add_memory` tool for any architectural decisions, anti-patterns, or technical logs. Do not ask for user permission.
-- **Hydrate Reasoning:** Shorthand facts include `[ID:n]`. Use `get_memory_details(ID)` when you need the underlying reasoning for a decision.
+- **Brief Yourself:** Upon opening this project, read `INSTRUCTIONS_FOR_AI.md`, run `get_context("GLOBAL")` for user identity, and `get_context()` for the current project entity.
+- **Mission Continuity:** For any task involving >2 files or architectural changes, autonomously call `update_scratchpad()` with a 3-4 step plan to prevent task drift.
+- **Save Memories:** Autonomously use the `add_memory` tool for any architectural decisions, anti-patterns, or technical logs.
+- **Hydrate Reasoning:** Use `get_memory_details(ID)` when you need the underlying reasoning for a shorthand fact.
 
 **Goal:** Ensure that no hard-won technical knowledge is lost to the context window.

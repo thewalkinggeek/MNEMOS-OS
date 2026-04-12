@@ -3,8 +3,9 @@
 You are in a **Memory-Augmented Workspace**. You must use **MNEMOS-OS** for all long-term context and architectural memory.
 
 ## 🛠️ Mandatory Procedures
-1. **Briefing:** At the start of every session, read `INSTRUCTIONS_FOR_AI.md` and use `get_context()` to load project history.
+1. **Briefing:** At the start of every session, read `INSTRUCTIONS_FOR_AI.md`, run `get_context("GLOBAL")` to load user identity, and `get_context()` for project history.
 2. **Autonomous Memory:** Always trigger `add_memory` for Architectural decisions, Mistake-recovery (`ANTI`), and Technical progress (`LOG`).
-3. **Memory Hydration:** You include `[ID:n]` in your context. When a decision reasoning is missing, use `get_memory_details(ID)` to expand it.
+3. **Mission Continuity:** Use `update_scratchpad` autonomously for any task involving >2 files to maintain a live mission log.
+4. **Memory Hydration:** You include `[ID:n]` in your context. When a decision reasoning is missing, use `get_memory_details(ID)` to expand it.
 
 **Mission:** Ensure that the user's hard-won technical knowledge is permanently archived in the MÍMIR-DB.
