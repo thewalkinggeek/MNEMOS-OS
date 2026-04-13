@@ -6,15 +6,21 @@
 import asyncio
 import sys
 import os
+import json
 from mcp.server.fastmcp import FastMCP
 
 # Add parent directory to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.engine import MnemosCore
+from cli.mnemos import GhostBridge, get_active_branch
 
 # Initialize FastMCP server
 mcp = FastMCP("MNEMOS-OS")
 core = MnemosCore()
+
+def get_bridge():
+    """Helper to get a fresh bridge connection for every request (Stateless)."""
+    return GhostBridge()
 
 @mcp.tool()
 def add_memory(entity: str, aspect: str, text: str, salience: int = 5, file_path: str = None, related_id: int = None) -> str:
@@ -24,7 +30,18 @@ def add_memory(entity: str, aspect: str, text: str, salience: int = 5, file_path
     Optional: file_path to link this memory to a specific file.
     Optional: related_id to link this memory to a previous decision or fact.
     """
-    row_id = core.add_fact(entity, aspect, text, salience, file_path=file_path, related_id=related_id)
+    branch = get_active_branch()
+    ghost = get_bridge()
+    
+    if ghost.is_connected:
+        res = ghost.send("add", {
+            "entity": entity, "aspect": aspect, "raw_text": text,
+            "salience": salience, "file_path": file_path, "related_id": related_id
+        }, branch=branch)
+        row_id = res.get("id", -1) if res else -1
+    else:
+        row_id = core.add_fact(entity, aspect, text, salience, file_path=file_path, related_id=related_id, branch_name=branch)
+        
     if row_id == -1:
         return "Fact ignored by Salience Filter (too noisy)."
     msg = f"Fact successfully carved into stone (ID: {row_id})."
@@ -36,14 +53,23 @@ def get_context(entity: str, limit: int = 15) -> str:
     """
     Retrieves the active mindset, including the scratchpad and shorthand facts.
     """
-    return core.get_context(entity, limit=limit)
+    branch = get_active_branch()
+    ghost = get_bridge()
+    
+    if ghost.is_connected:
+        res = ghost.send("context", {"entity": entity, "limit": limit}, branch=branch)
+        return res.get("context", "Error retrieving context via Ghost.") if res else "Ghost connection failed."
+    
+    return core.get_context(entity, limit=limit, branch_name=branch)
 
 @mcp.tool()
 def get_file_memory(file_path: str) -> str:
     """
     Retrieves memories specifically linked to a file path.
     """
-    return core.get_file_context(file_path)
+    branch = get_active_branch()
+    # Note: engine.get_file_context already traverses parents
+    return core.get_file_context(file_path, branch_name=branch)
 
 @mcp.tool()
 def get_memory_details(memory_id: int) -> str:
@@ -51,7 +77,13 @@ def get_memory_details(memory_id: int) -> str:
     Retrieves the full, uncompressed content and metadata for a specific memory ID.
     Use this to 'hydrate' a shorthand fact when you need to understand the underlying reasoning or trade-offs.
     """
-    details = core.get_memory_details(memory_id)
+    ghost = get_bridge()
+    if ghost.is_connected:
+        res = ghost.send("details", {"memory_id": memory_id})
+        details = res.get("details") if res else None
+    else:
+        details = core.get_memory_details(memory_id)
+        
     if not details:
         return f"Memory with ID {memory_id} not found."
     
@@ -70,7 +102,14 @@ def update_scratchpad(plan: str) -> str:
     """
     Updates the persistent session scratchpad for multi-step task tracking.
     """
-    core.update_scratchpad(plan)
+    branch = get_active_branch()
+    ghost = get_bridge()
+    
+    if ghost.is_connected:
+        ghost.send("update_scratchpad", {"content": plan}, branch=branch)
+    else:
+        core.update_scratchpad(plan, branch_name=branch)
+        
     return "Scratchpad updated successfully."
 
 @mcp.tool()
@@ -78,7 +117,15 @@ def search_memory(query: str) -> str:
     """
     Searches all memories using FTS5 keyword matching.
     """
-    results = core.search(query)
+    branch = get_active_branch()
+    ghost = get_bridge()
+    
+    if ghost.is_connected:
+        res = ghost.send("search", {"query": query}, branch=branch)
+        results = res.get("results", []) if res else []
+    else:
+        results = core.search(query, branch_name=branch)
+        
     if not results:
         return "No matches found."
     
@@ -93,7 +140,13 @@ def list_entities() -> str:
     Returns a list of all existing projects/entities in the memory database.
     Use this to see what other knowledge bases you can query.
     """
-    entities = core.list_entities()
+    ghost = get_bridge()
+    if ghost.is_connected:
+        res = ghost.send("list_entities")
+        entities = res.get("entities", []) if res else []
+    else:
+        entities = core.list_entities()
+        
     return "Known Entities: " + ", ".join(entities) if entities else "No entities found."
 
 if __name__ == "__main__":
