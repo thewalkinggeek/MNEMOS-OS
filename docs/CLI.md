@@ -1,3 +1,5 @@
+[← Back to README](../README.md)
+
 # 🛠️ CLI Command Reference
 
 MNEMOS-OS provides both a high-velocity **Interactive Terminal** and a standard **Script Interface**.

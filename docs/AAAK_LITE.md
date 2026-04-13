@@ -1,3 +1,5 @@
+[← Back to README](../README.md)
+
 # 💎 AAAK-Lite Specification
 
 **AAAK-Lite** (Automated Agent Knowledge - Lite) is a compressed dialect designed for high-density AI memory. It prioritizes technical "shorthand" over conversational prose, saving up to 90% on context window tokens.

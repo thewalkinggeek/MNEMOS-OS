@@ -1,3 +1,5 @@
+[← Back to README](../README.md)
+
 # 🔌 Integration Guide (MCP)
 
 MNEMOS-OS uses the **Model Context Protocol (MCP)** to provide memory to any AI agent.

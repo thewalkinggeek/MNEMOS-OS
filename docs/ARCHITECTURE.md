@@ -1,3 +1,5 @@
+[← Back to README](../README.md)
+
 # 🏗️ MNEMOS-OS Architecture
 
 MNEMOS-OS is designed as a **Micro-Kernel Memory Layer**. Unlike standard vector databases or local loggers, it operates as a low-latency IPC bridge that synchronizes multiple AI agents into a single "Hive Mind."
