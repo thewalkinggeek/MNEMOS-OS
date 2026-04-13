@@ -15,8 +15,9 @@ MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented deve
 
 <br>
 
-## 🚀 The v1.2.0 Velocity Update
-- 👻 **Ghost Kernel (IPC):** Near-instant memory access (~0.1ms) via local bridge.
+## 🚀 v1.2.0 — The Velocity & Portability Update
+- 👻 **Ghost Kernel (Ring -1):** Near-instant memory access (~0.1ms) via IPC.
+- 📦 **Portable Lore:** JSON-based Import/Export for sharing and Git versioning.
 - 🌿 **Cognitive Branching:** Isolate and merge experimental thoughts like code.
 - 📜 **Recursive Lore:** Automatic context inheritance from parent folders.
 - 🛡️ **Stateless Multi-Agent:** Synchronize multiple AI tools without race conditions.

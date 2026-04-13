@@ -174,7 +174,16 @@ def main():
     delete_branch_parser = subparsers.add_parser("delete-branch", help="Delete all memories for a specific branch")
     delete_branch_parser.add_argument("name", help="Name of the branch to delete")
 
-    # 14. Help
+    # 14. Export (v1.2.1)
+    export_parser = subparsers.add_parser("export", help="Export memories to a JSON file for portability")
+    export_parser.add_argument("file", help="Destination JSON file path")
+    export_parser.add_argument("--entity", help="Optional: Filter by project entity")
+
+    # 15. Import (v1.2.1)
+    import_parser = subparsers.add_parser("import", help="Import memories from a JSON file")
+    import_parser.add_argument("file", help="Source JSON file path")
+
+    # 16. Help
     help_parser = subparsers.add_parser("help", help="Show this help message and exit")
 
     args = parser.parse_args()
@@ -265,9 +274,10 @@ def main():
     elif args.command == "list":
         if ghost.is_connected:
             res = ghost.send("list_memories", {"entity": args.entity}, branch=active_branch)
-            results = res.get("memories", []) if res else [] # Note: route_command returns 'memories' for list_memories? No, I need to check core/ghost.py
+            results = res.get("results", []) if res else []
         else:
             results = mnemo.list_memories(entity=args.entity)
+        
         if not results:
             print(f" {C_RED}- Memory is empty.{C_RST}")
         else:
@@ -278,6 +288,17 @@ def main():
             for r in results:
                 print(f" {C_BLD}{str(r[0]):<12}{C_RST} | {C_YLW}{str(r[1]):<6}{C_RST} | {C_RST}{str(r[3]):<2} | {str(r[2])}")
             print("")
+
+    elif args.command == "export":
+        count = mnemo.export_json(args.file, entity=args.entity)
+        print(f" {C_GRN}✔ Exported {count} memories to '{args.file}'{C_RST}")
+
+    elif args.command == "import":
+        count = mnemo.import_json(args.file)
+        if count == -1:
+            print(f" {C_RED}❌ Import failed: File '{args.file}' not found.{C_RST}")
+        else:
+            print(f" {C_GRN}✔ Imported {count} memories from '{args.file}'{C_RST}")
 
     elif args.command == "scratch":
         mnemo.update_scratchpad(args.plan)

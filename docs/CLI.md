@@ -46,6 +46,18 @@ Surgically removes an experimental branch and its associated memories.
 
 ---
 
+## 📦 Portability (New in v1.2.1)
+
+### `export <file>`
+Exports memories to a JSON file.
+- **Flags:**
+  - `--entity <name>`: Optional: Only export memories for a specific project.
+
+### `import <file>`
+Imports memories from a JSON file. Automatically handles AAAK-Lite distillation for raw text in the import.
+
+---
+
 ## 🧹 Maintenance
 
 ### `purge [--days N] [--min-salience N]`

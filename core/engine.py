@@ -5,6 +5,7 @@
 
 import sqlite3
 import os
+import json
 from datetime import datetime
 
 class MnemosCore:
@@ -111,6 +112,58 @@ class MnemosCore:
             cursor.execute("DELETE FROM scratchpad WHERE branch = ?", (branch_name,))
             conn.commit()
             return count
+
+    def export_json(self, file_path, entity=None, branch_name=None):
+        """Exports memories to a JSON file for portability."""
+        active_branch = branch_name or self.branch
+        with self._get_conn() as conn:
+            cursor = conn.cursor()
+            query = "SELECT entity, aspect, shorthand, raw_content, salience, branch FROM knowledge WHERE (branch = ? OR branch = 'main')"
+            params = [active_branch]
+            if entity:
+                query += " AND entity = ?"
+                params.append(entity.upper())
+            
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            
+            data = []
+            for r in rows:
+                data.append({
+                    "entity": r[0],
+                    "aspect": r[1],
+                    "shorthand": r[2],
+                    "raw": r[3],
+                    "salience": r[4],
+                    "branch": r[5]
+                })
+                
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=4)
+            return len(data)
+
+    def import_json(self, file_path):
+        """Imports memories from a JSON file."""
+        if not os.path.exists(file_path):
+            return -1
+            
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        count = 0
+        for item in data:
+            # We use add_fact to ensure distillation and triggers run correctly
+            # We pass branch_name from the JSON to preserve original state
+            res = self.add_fact(
+                entity=item['entity'],
+                aspect=item['aspect'],
+                raw_text=item['raw'],
+                salience=item.get('salience', 5),
+                branch_name=item.get('branch', 'main')
+            )
+            if res != -1:
+                count += 1
+        return count
 
     def _ensure_initialized(self):
         """Checks if the database is initialized and runs schema if not."""

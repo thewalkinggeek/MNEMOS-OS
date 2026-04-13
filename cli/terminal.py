@@ -42,7 +42,7 @@ mnemos_style = Style.from_dict({
 
 class MnemosCompleter(Completer):
     def __init__(self):
-        self.commands = ['add', 'context', 'scratch', 'file', 'list', 'search', 'purge', 'exit', 'help', 'menu', 'details', 'projects']
+        self.commands = ['add', 'context', 'scratch', 'file', 'list', 'search', 'purge', 'exit', 'help', 'menu', 'details', 'projects', 'branch', 'checkout', 'merge', 'delete-branch', 'export', 'import']
         self.aspects = ['PREF', 'BUG', 'ARCH', 'DEP', 'LOG', 'ANTI']
         self.examples = {
             'add': 'Archive a project fact, decision, or preference',
@@ -53,6 +53,12 @@ class MnemosCompleter(Completer):
             'file': 'Get context specifically for a code file',
             'list': 'Browse stored memories by project',
             'search': 'Search all memories by keyword (FTS5)',
+            'branch': 'List or create cognitive branches',
+            'checkout': 'Switch the active cognitive branch',
+            'merge': 'Promote experimental memories to main',
+            'delete-branch': 'Surgically remove an experimental branch',
+            'export': 'Dump project lore into a JSON file',
+            'import': 'Load a technical lore package from JSON',
             'purge': 'Clean stale, low-salience data from Mimir-DB',
             'menu': 'Return to the main launcher menu',
             'help': 'View the detailed command guide',
@@ -63,20 +69,26 @@ class MnemosCompleter(Completer):
         text = document.text_before_cursor
         tokens = text.split()
         
-        if len(tokens) <= 1 and not text.endswith(' '):
+        # Command completion
+        if len(tokens) == 0 or (len(tokens) == 1 and not text.endswith(' ')):
             word = tokens[0] if tokens else ""
             for cmd in self.commands:
-                if cmd.startswith(word):
+                if cmd.startswith(word.lower()):
                     yield Completion(cmd + " ", start_position=-len(word), display_meta=self.examples.get(cmd, ""))
         
+        # Sub-command/Argument completion
         elif len(tokens) >= 2:
             cmd = tokens[0].lower()
             if cmd == 'add':
+                # Suggest aspects for 'add <entity> [HERE]'
                 if len(tokens) == 3 and not text.endswith(' '):
                     word = tokens[2]
                     for aspect in self.aspects:
                         if aspect.startswith(word.upper()):
                             yield Completion(aspect + " ", start_position=-len(word))
+                elif len(tokens) == 2 and text.endswith(' '):
+                    for aspect in self.aspects:
+                        yield Completion(aspect + " ", start_position=0)
 
 def main():
     mnemo = MnemosCore()
@@ -247,6 +259,68 @@ def main():
                 deleted = mnemo.purge_lethe(days=days, min_salience=min_salience)
                 print_formatted_text(HTML(f' <magenta>* Purged {deleted} memories (older than {days} days, salience &lt; {min_salience}).</magenta>'), style=mnemos_style)
 
+            elif cmd == 'branch':
+                name = args[1] if len(args) >= 2 else None
+                with mnemo._get_conn() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT DISTINCT branch FROM knowledge")
+                    branches = [row[0] for row in cursor.fetchall()]
+                
+                from cli.mnemos import get_active_branch
+                active = get_active_branch()
+                print_formatted_text(HTML(f'\n <cyan>COGNITIVE BRANCHES:</cyan>'), style=mnemos_style)
+                for b in branches:
+                    prefix = HTML('<success>* </success>') if b == active else '  '
+                    print_formatted_text(HTML(f' {prefix}{b}'), style=mnemos_style)
+                
+                if name and name not in branches:
+                    print_formatted_text(HTML(f' <yellow>- Branch "{name}" is new and will be created on first "add".</yellow>'), style=mnemos_style)
+                print("")
+
+            elif cmd == 'checkout' and len(args) >= 2:
+                from cli.mnemos import set_active_branch
+                if set_active_branch(args[1]):
+                    mnemo.set_branch(args[1])
+                    print_formatted_text(HTML(f' <success>* Switched to branch "{args[1]}"</success>'), style=mnemos_style)
+
+            elif cmd == 'merge' and len(args) >= 2:
+                source = args[1]
+                target = 'main'
+                if '--target' in args:
+                    try: target = args[args.index('--target')+1]
+                    except: pass
+                count = mnemo.merge_branch(source, target)
+                print_formatted_text(HTML(f' <success>* Merged {count} memories from "{source}" into "{target}"</success>'), style=mnemos_style)
+
+            elif cmd == 'delete-branch' and len(args) >= 2:
+                name = args[1]
+                if name == 'main':
+                    print_formatted_text(HTML(' <error>[!] Cannot delete the "main" branch.</error>'), style=mnemos_style)
+                else:
+                    count = mnemo.delete_branch(name)
+                    from cli.mnemos import get_active_branch, set_active_branch
+                    if get_active_branch() == name:
+                        set_active_branch('main')
+                        mnemo.set_branch('main')
+                    print_formatted_text(HTML(f' <magenta>* Deleted branch "{name}" ({count} memories removed).</magenta>'), style=mnemos_style)
+
+            elif cmd == 'export' and len(args) >= 2:
+                file_path = args[1]
+                entity = None
+                if '--entity' in args:
+                    try: entity = args[args.index('--entity')+1]
+                    except: pass
+                count = mnemo.export_json(file_path, entity=entity)
+                print_formatted_text(HTML(f' <success>* Exported {count} memories to "{file_path}"</success>'), style=mnemos_style)
+
+            elif cmd == 'import' and len(args) >= 2:
+                file_path = args[1]
+                count = mnemo.import_json(file_path)
+                if count == -1:
+                    print_formatted_text(HTML(f' <error>[!] Import failed: File "{file_path}" not found.</error>'), style=mnemos_style)
+                else:
+                    print_formatted_text(HTML(f' <success>* Imported {count} memories from "{file_path}"</success>'), style=mnemos_style)
+
             elif cmd == 'menu':
                 sys.exit(100)
 
@@ -269,6 +343,18 @@ def main():
                 print_formatted_text(HTML(f'    <gray>Find memories matching keywords using high-speed FTS5.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>list [entity]</yellow>'), style=mnemos_style)
                 print_formatted_text(HTML(f'    <gray>Browse all stored memories, optionally filtered by project.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>branch [name]</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>List cognitive branches or prepare a new one for creation.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>checkout &lt;name&gt;</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Switch the active cognitive branch context.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>merge &lt;source&gt; [--target main]</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Promote experimental memories to the stable main bank.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>delete-branch &lt;name&gt;</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Surgically remove an experimental branch and its facts.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>export &lt;file&gt; [--entity name]</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Dump project lore into a structured JSON file for sharing.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>import &lt;file&gt;</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>Import a lore package into the Mimir-DB.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>purge [--days N] [--min-salience N]</yellow>'), style=mnemos_style)
                 print_formatted_text(HTML(f'    <gray>Surgically clean old, low-salience memories from the DB.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>menu</yellow>'), style=mnemos_style)
@@ -277,7 +363,7 @@ def main():
                 print_formatted_text(HTML(f'    <gray>Securely disconnect from the memory kernel.</gray>\n'), style=mnemos_style)
             
             else:
-                if cmd not in ['add', 'context', 'search', 'purge', 'scratch', 'file', 'menu', 'list']:
+                if cmd not in ['add', 'context', 'search', 'purge', 'scratch', 'file', 'menu', 'list', 'branch', 'checkout', 'merge', 'delete-branch', 'export', 'import']:
                     print_formatted_text(HTML(f' <error>[!] Unknown command. Type "help" for info.</error>'), style=mnemos_style)
                 else:
                     print_formatted_text(HTML(f' <error>[!] Missing arguments for "{cmd}".</error>'), style=mnemos_style)
