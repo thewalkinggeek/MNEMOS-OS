@@ -1,4 +1,4 @@
-venv/
+﻿venv/
 __pycache__/
 *.pyc
 data/mnemos.db
@@ -12,5 +12,5 @@ data/.history
 # Local Tooling
 manage_mnemos.bat
 
-# Benchmark Scripts (Internal)
-scripts/
+# Internal Research
+BRAINSTORM.md

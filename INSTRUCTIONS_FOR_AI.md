@@ -40,24 +40,28 @@ The Scratchpad is your **Live Mission Log**. You must ensure it stays accurate t
 
 ---
 
-## ⚡ The Memory Triggers
-Do not wait for the user to ask you to "remember." Trigger a `save` for:
+## ⚡ The Memory Triggers (Autonomous vs. Manual)
+MNEMOS-OS operates on a strict **Observation vs. Action** boundary.
 
-### **1. The Architectural Pivot (ARCH)**
-*   **Trigger:** A decision regarding libraries, structure, or core logic.
-*   **Action:** `add_memory(ENTITY, "ARCH", "...", salience=9)`
+### **1. Autonomous Observations (The Background)**
+You **MUST** trigger a `save` and update the `scratchpad` without waiting for the user's permission for:
+*   **The Architectural Pivot (ARCH):** Decisions regarding libraries, structure, or core logic.
+*   **The ANTI-Pattern (ANTI):** Major mistakes or bugs requiring >2 fix attempts.
+*   **Session Logs (LOG):** Significant changes to specific files.
+*   **Plan Updates:** Keeping the `scratchpad` accurate as you progress.
+*   *Why:* To prevent **Knowledge Debt** and context drift.
 
-### **2. The ANTI-Pattern (ANTI)**
-*   **Trigger:** A major mistake is identified or a bug requires >2 attempts to fix.
-*   **Action:** `add_memory(ENTITY, "ANTI", "Avoid [X] because [Y]", salience=10)`
-
-### **3. File-Specific Context**
-*   **Trigger:** Making a significant change to a specific file.
-*   **Action:** `add_memory(ENTITY, "LOG", "...", file_path="path/to/file")`
+### **2. Manual Implementation (The Foreground)**
+You **MUST** wait for explicit user confirmation (a "Go" or similar directive) before:
+*   **Modifying Files:** Any `replace`, `write_file`, or `run_shell_command` that changes the workspace.
+*   **Structural Refactoring:** Deleting or moving files.
+*   **Executing implementation:** Even if you have a perfect plan, do not "Act" until the user approves.
+*   *Why:* To maintain **User Oversight** and system safety.
 
 ---
 
-## 💧 The Hydration & Discovery Protocols
+## 🗣️ AAAK-Lite Encoding Rules
+
 *   **Hydration:** Never guess ambiguous shorthand. Use `get_memory_details(ID)` to expand reasoning.
 *   **Discovery:** For cross-cutting tasks (auth, db), run `list_entities()` to see if other "brains" have relevant `ANTI` or `ARCH` lessons.
 

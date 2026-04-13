@@ -8,16 +8,109 @@ import os
 from datetime import datetime
 
 class MnemosCore:
-    def __init__(self, db_path=None):
+    def __init__(self, db_path=None, branch='main'):
+        if db_path is None:
+            # Check for environment override
+            db_path = os.environ.get("MNEMOS_DB_PATH")
+            
         if db_path is None:
             # Default to data folder relative to this file
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             db_path = os.path.join(base_dir, "data", "mnemos.db")
         self.db_path = db_path
+        self.branch = branch
         self._ensure_initialized()
+        self._migrate_branching()
 
     def _get_conn(self):
-        return sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path)
+        # Enable WAL mode for high-concurrency (Multi-AI Sync)
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA synchronous=NORMAL;")
+        return conn
+
+    def _migrate_branching(self):
+        """Phase 2 Migration: Ensures branch columns and indexes exist for existing DBs."""
+        with self._get_conn() as conn:
+            cursor = conn.cursor()
+            
+            # 1. Migrate knowledge table
+            cursor.execute("PRAGMA table_info(knowledge)")
+            columns = [col[1] for col in cursor.fetchall()]
+            if 'branch' not in columns:
+                cursor.execute("ALTER TABLE knowledge ADD COLUMN branch TEXT DEFAULT 'main'")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_knowledge_branch_entity ON knowledge(branch, entity)")
+            
+            # 2. Migrate scratchpad table (Drop/Recreate for new PK structure)
+            cursor.execute("PRAGMA table_info(scratchpad)")
+            sp_columns = [col[1] for col in cursor.fetchall()]
+            if 'branch' not in sp_columns:
+                # Backup existing content if any
+                cursor.execute("SELECT content FROM scratchpad WHERE id = 1")
+                row = cursor.fetchone()
+                existing_content = row[0] if row else "Welcome to MNEMOS-OS. Memory active."
+                
+                cursor.execute("DROP TABLE IF EXISTS scratchpad")
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS scratchpad (
+                        branch TEXT PRIMARY KEY,
+                        content TEXT NOT NULL,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                cursor.execute("INSERT INTO scratchpad (branch, content) VALUES ('main', ?)", (existing_content,))
+            
+            # 3. Migrate FTS5 (Drop/Recreate to include branch)
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='knowledge_search'")
+            if cursor.fetchone():
+                # Check if branch is in FTS table
+                cursor.execute("PRAGMA table_info(knowledge_search)")
+                fts_columns = [col[1] for col in cursor.fetchall()]
+                if 'branch' not in fts_columns:
+                    # Dropping FTS and triggers; _run_schema will recreate them correctly 
+                    # from the updated schema.sql next time, but here we do it manually to be safe.
+                    cursor.execute("DROP TABLE IF EXISTS knowledge_search")
+                    cursor.execute("DROP TRIGGER IF EXISTS knowledge_ai")
+                    cursor.execute("DROP TRIGGER IF EXISTS knowledge_ad")
+                    cursor.execute("DROP TRIGGER IF EXISTS knowledge_au")
+                    self._run_schema() # Re-run to get updated virtual tables and triggers
+            
+            conn.commit()
+
+    def set_branch(self, branch_name):
+        """Switches the active cognitive branch."""
+        self.branch = branch_name
+
+    def merge_branch(self, source_branch, target_branch='main'):
+        """Promotes all memories from the source branch to the target branch."""
+        with self._get_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE knowledge SET branch = ? WHERE branch = ?
+            """, (target_branch, source_branch))
+            count = cursor.rowcount
+            
+            # Also merge scratchpad content if target is empty
+            cursor.execute("SELECT content FROM scratchpad WHERE branch = ?", (target_branch,))
+            if not cursor.fetchone():
+                cursor.execute("SELECT content FROM scratchpad WHERE branch = ?", (source_branch,))
+                row = cursor.fetchone()
+                if row:
+                    cursor.execute("INSERT INTO scratchpad (branch, content) VALUES (?, ?)", (target_branch, row[0]))
+            
+            conn.commit()
+            return count
+
+    def delete_branch(self, branch_name):
+        """Deletes all memories and scratchpad for a specific branch."""
+        if branch_name == 'main': return 0 # Cannot delete main
+        with self._get_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM knowledge WHERE branch = ?", (branch_name,))
+            count = cursor.rowcount
+            cursor.execute("DELETE FROM scratchpad WHERE branch = ?", (branch_name,))
+            conn.commit()
+            return count
 
     def _ensure_initialized(self):
         """Checks if the database is initialized and runs schema if not."""
@@ -48,20 +141,21 @@ class MnemosCore:
                 conn.commit()
 
 
-    def add_fact(self, entity, aspect, raw_text, salience=5, file_path=None, related_id=None):
+    def add_fact(self, entity, aspect, raw_text, salience=5, file_path=None, related_id=None, branch_name=None):
         """Compresses and saves a fact to the Mimir-DB."""
         # Salience Filter: Discard noisy text
         if len(raw_text.strip()) < 3 or raw_text.lower().strip() in ["hello", "thanks", "ok", "yes", "no"]:
             return -1 # Filtered out
             
         shorthand = self.distill(aspect, raw_text)
+        active_branch = branch_name or self.branch
         
         with self._get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO knowledge (entity, aspect, shorthand, raw_content, salience, related_id)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (entity.upper(), aspect.upper(), shorthand, raw_text, salience, related_id))
+                INSERT INTO knowledge (entity, aspect, shorthand, raw_content, salience, related_id, branch)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (entity.upper(), aspect.upper(), shorthand, raw_text, salience, related_id, active_branch))
             row_id = cursor.lastrowid
             
             # Link to file if provided
@@ -129,59 +223,71 @@ class MnemosCore:
                 }
             return None
 
-    def get_context(self, entity, limit=15, include_scratchpad=True):
+    def get_context(self, entity, limit=15, include_scratchpad=True, branch_name=None):
         """Assembles context with Active Salience and Cross-Project Intelligence.
         Safety Guarantee: Salience 9+ (ARCH/ANTI) does not decay with age.
         """
         context_parts = []
         entity = entity.upper()
+        active_branch = branch_name or self.branch
         
         with self._get_conn() as conn:
             cursor = conn.cursor()
             
-            # 1. Get Scratchpad
+            # 1. Get Scratchpad for the current branch
             if include_scratchpad:
-                cursor.execute("SELECT content FROM scratchpad WHERE id = 1")
+                cursor.execute("SELECT content FROM scratchpad WHERE branch = ?", (active_branch,))
                 row = cursor.fetchone()
+                if not row and active_branch != 'main':
+                    # Fallback to main scratchpad if branch-specific one doesn't exist yet
+                    cursor.execute("SELECT content FROM scratchpad WHERE branch = 'main'")
+                    row = cursor.fetchone()
                 if row:
                     context_parts.append(f"[SCRATCHPAD] {row[0]}")
 
-            # 2. Local & Global Context Mix
+            # 2. Local & Global Context Mix (Filtered by Branch)
             # Priority Logic: 
             # - If Salience >= 9: (Salience * 10) + (Usage * 2)  [NO AGE DECAY]
             # - If Salience < 9:  (Salience * 10) + (Usage * 2) - AgeInDays
             cursor.execute("""
                 SELECT id, entity, shorthand, raw_content, salience, priority FROM (
                     WITH ranked_knowledge AS (
-                        SELECT id, entity, shorthand, raw_content, salience, usage_count,
+                        SELECT id, entity, shorthand, raw_content, salience, usage_count, branch,
                             CASE 
                                     WHEN salience >= 9 THEN (salience * 10) + (usage_count * 2)
                                     ELSE (salience * 10) + (usage_count * 2) - (julianday('now') - julianday(created_at))
                             END as priority
                         FROM knowledge
+                        WHERE (branch = ? OR branch = 'main')
                     )
                     SELECT id, entity, shorthand, raw_content, salience, priority, 1 as is_local FROM ranked_knowledge 
-                    WHERE entity = ? OR entity = 'GLOBAL'
+                    WHERE entity = ? OR entity = 'CORE'
                     
                     UNION ALL
                     
                     -- High-Utility Cross-Entity 'Heat'
                     SELECT id, entity, shorthand, raw_content, salience, priority, 0 as is_local FROM (
                         SELECT * FROM ranked_knowledge 
-                        WHERE entity != ? AND entity != 'GLOBAL' AND usage_count > 0
+                        WHERE entity != ? AND entity != 'CORE' AND usage_count > 0
                         ORDER BY usage_count DESC LIMIT 3
                     )
                 )
                 ORDER BY is_local DESC, priority DESC
                 LIMIT ?
-            """, (entity, entity, limit))
+            """, (active_branch, entity, entity, limit))
             
             rows = cursor.fetchall()
             if rows:
                 facts = []
                 for row in rows:
                     mem_id, ent, shorthand, raw, salience = row[0], row[1], row[2], row[3], row[4]
-                    prefix = f"[{ent}] " if ent != entity else ""
+                    if ent == entity:
+                        prefix = ""
+                    elif ent == 'CORE':
+                        prefix = "[CORE] "
+                    else:
+                        prefix = f"[EXTERNAL: {ent}] "
+                        
                     if salience >= 9:
                         facts.append(f"{prefix}{shorthand} [ID:{mem_id}] (FULL: {raw})")
                     else:
@@ -197,7 +303,7 @@ class MnemosCore:
             return "\n".join(context_parts) if context_parts else "No prior context found."
 
     def get_file_context(self, file_path):
-        """Retrieves memories linked to this file or any of its parent directories."""
+        """Retrieves memories linked to this file or any of its parent directories (Recursive Lore)."""
         # Normalize path
         target_path = file_path.replace("\\", "/").lower()
         parts = target_path.split("/")
@@ -205,19 +311,25 @@ class MnemosCore:
         # Build list of potential parent paths: ["src/auth/login.py", "src/auth", "src", ""]
         prefixes = [target_path]
         for i in range(1, len(parts)):
-            prefixes.append("/".join(parts[:-i]))
+            parent = "/".join(parts[:-i])
+            if parent:
+                prefixes.append(parent)
             
         with self._get_conn() as conn:
             cursor = conn.cursor()
             placeholders = ",".join(["?"] * len(prefixes))
-            # Match exact prefixes OR patterns like "%login.py"
+            
+            # Match exact prefixes OR patterns
+            # Priority: Direct file match > Immediate Parent > Root > Patterns
             cursor.execute(f"""
                 SELECT k.shorthand FROM knowledge k
                 JOIN file_links fl ON k.id = fl.knowledge_id
-                WHERE LOWER(fl.file_path) IN ({placeholders})
-                OR ? LIKE '%' || LOWER(fl.file_path)
+                WHERE (branch = ? OR branch = 'main')
+                AND (LOWER(fl.file_path) IN ({placeholders})
+                OR ? LIKE '%' || LOWER(fl.file_path))
                 ORDER BY k.salience DESC, k.created_at DESC
-            """, (*prefixes, target_path))
+            """, (self.branch, *prefixes, target_path))
+            
             facts = [row[0] for row in cursor.fetchall()]
             # Use a set to remove duplicates if multiple patterns match
             return " | ".join(list(dict.fromkeys(facts))) if facts else ""
@@ -230,48 +342,51 @@ class MnemosCore:
             return [row[0] for row in cursor.fetchall()]
 
 
-    def update_scratchpad(self, content):
-        """Updates the persistent session scratchpad."""
+    def update_scratchpad(self, content, branch_name=None):
+        """Updates the persistent session scratchpad for the current branch."""
+        active_branch = branch_name or self.branch
         with self._get_conn() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO scratchpad (id, content, updated_at)
-                VALUES (1, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(id) DO UPDATE SET 
+                INSERT INTO scratchpad (branch, content, updated_at)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(branch) DO UPDATE SET 
                     content = excluded.content,
                     updated_at = CURRENT_TIMESTAMP
-            """, (content,))
+            """, (active_branch, content))
             conn.commit()
             return True
 
 
-    def search(self, query):
-        """Uses FTS5 to find specific memories across all entities."""
+    def search(self, query, branch_name=None):
+        """Uses FTS5 to find specific memories across all entities in the current branch."""
+        active_branch = branch_name or self.branch
         with self._get_conn() as conn:
             cursor = conn.cursor()
             # Wrap query in double quotes to handle hyphens and special chars in FTS5
             safe_query = f'"{query}"'
             cursor.execute("""
                 SELECT entity, aspect, shorthand FROM knowledge_search 
-                WHERE knowledge_search MATCH ?
-            """, (safe_query,))
+                WHERE knowledge_search MATCH ? AND (branch = ? OR branch = 'main')
+            """, (safe_query, active_branch))
             return cursor.fetchall()
 
-    def list_memories(self, entity=None, limit=100):
-        """Returns a list of all memories, optionally filtered by entity."""
+    def list_memories(self, entity=None, limit=100, branch_name=None):
+        """Returns a list of all memories for the current branch, optionally filtered by entity."""
+        active_branch = branch_name or self.branch
         with self._get_conn() as conn:
             cursor = conn.cursor()
+            query = "SELECT entity, aspect, shorthand, salience, created_at FROM knowledge WHERE (branch = ? OR branch = 'main')"
+            params = [active_branch]
+            
             if entity:
-                cursor.execute("""
-                    SELECT entity, aspect, shorthand, salience, created_at 
-                    FROM knowledge WHERE entity = ? 
-                    ORDER BY created_at DESC LIMIT ?
-                """, (entity.upper(), limit))
-            else:
-                cursor.execute("""
-                    SELECT entity, aspect, shorthand, salience, created_at 
-                    FROM knowledge ORDER BY created_at DESC LIMIT ?
-                """, (limit,))
+                query += " AND entity = ?"
+                params.append(entity.upper())
+            
+            query += " ORDER BY created_at DESC LIMIT ?"
+            params.append(limit)
+            
+            cursor.execute(query, params)
             return cursor.fetchall()
 
     def purge_lethe(self, days=30, min_salience=3):

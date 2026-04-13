@@ -23,8 +23,95 @@ C_RST = "\033[0m"
 C_BLD = "\033[1m"
 C_GRY = "\033[90m"
 
+import json
+import socket
+import time
+
+class GhostBridge:
+    """Zero-latency bridge to the Ghost Kernel daemon."""
+    def __init__(self):
+        self.is_connected = False
+        self.pipe_name = r'\\.\pipe\mnemos_ghost' if os.name == 'nt' else '/tmp/mnemos_ghost.sock'
+        self._connect()
+
+    def _connect(self):
+        try:
+            if os.name == 'nt':
+                import win32file, pywintypes
+                self.handle = win32file.CreateFile(
+                    self.pipe_name,
+                    win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+                    0, None, win32file.OPEN_EXISTING, 0, None
+                )
+                self.is_connected = True
+            else:
+                self.handle = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                self.handle.connect(self.pipe_name)
+                self.is_connected = True
+        except Exception:
+            self.is_connected = False
+
+    def send(self, command, args=None, branch="main"):
+        """Sends a command to the Ghost Kernel and returns the response."""
+        if not self.is_connected: return None
+        try:
+            payload = json.dumps({
+                "command": command, 
+                "args": args or {},
+                "branch": branch
+            }).encode('utf-8')
+            if os.name == 'nt':
+                import win32file
+                win32file.WriteFile(self.handle, payload)
+                resp, data = win32file.ReadFile(self.handle, 65536)
+                return json.loads(data.decode('utf-8'))
+            else:
+                self.handle.sendall(payload)
+                data = self.handle.recv(65536)
+                return json.loads(data.decode('utf-8'))
+        except Exception:
+            return None
+        finally:
+            if os.name == 'nt':
+                import win32file
+                win32file.CloseHandle(self.handle)
+            else:
+                self.handle.close()
+
+def get_active_branch():
+    """Reads the active branch from the .mnemos_branch file in the current workspace."""
+    branch_file = os.path.join(os.getcwd(), ".mnemos_branch")
+    if os.path.exists(branch_file):
+        try:
+            with open(branch_file, "r") as f:
+                return f.read().strip()
+        except Exception:
+            pass
+    return "main"
+
+def set_active_branch(branch_name):
+    """Sets the active branch by writing to the .mnemos_branch file."""
+    branch_file = os.path.join(os.getcwd(), ".mnemos_branch")
+    try:
+        with open(branch_file, "w") as f:
+            f.write(branch_name)
+        return True
+    except Exception as e:
+        print(f" {C_RED}❌ Error switching branch: {e}{C_RST}")
+        return False
+
 def main():
-    mnemo = MnemosCore()
+    active_branch = get_active_branch()
+    
+    # Try to connect to Ghost Kernel for zero-latency
+    ghost = GhostBridge()
+    if ghost.is_connected:
+        # Sync branch state if Ghost is active
+        ghost.send("set_branch", {"branch": active_branch})
+    
+    # Fallback to local core if Ghost isn't running
+    mnemo = MnemosCore(branch=active_branch)
+    
     parser = argparse.ArgumentParser(description="MNEMOS-OS Command Line Interface")
     subparsers = parser.add_subparsers(dest="command")
 
@@ -70,7 +157,24 @@ def main():
     # 9. Projects (Discovery)
     subparsers.add_parser("projects", help="List all project entities in the database")
 
-    # 10. Help
+    # 10. Branching (Phase 2)
+    branch_parser = subparsers.add_parser("branch", help="List all cognitive branches or create a new one")
+    branch_parser.add_argument("name", nargs="?", help="Optional: Name of the new branch to create/list")
+
+    # 11. Checkout (Phase 2)
+    checkout_parser = subparsers.add_parser("checkout", help="Switch the active cognitive branch")
+    checkout_parser.add_argument("name", help="Name of the branch to switch to")
+
+    # 12. Merge (Phase 2)
+    merge_parser = subparsers.add_parser("merge", help="Promote all memories from an experimental branch to main")
+    merge_parser.add_argument("source", help="The branch to merge from")
+    merge_parser.add_argument("--target", default="main", help="The branch to merge into (default: main)")
+
+    # 13. Delete Branch (Phase 2)
+    delete_branch_parser = subparsers.add_parser("delete-branch", help="Delete all memories for a specific branch")
+    delete_branch_parser.add_argument("name", help="Name of the branch to delete")
+
+    # 14. Help
     help_parser = subparsers.add_parser("help", help="Show this help message and exit")
 
     args = parser.parse_args()
@@ -80,7 +184,15 @@ def main():
         sys.exit(0)
 
     if args.command == "add":
-        row_id = mnemo.add_fact(args.entity, args.aspect, args.text, args.salience, file_path=args.file, related_id=args.related)
+        if ghost.is_connected:
+            res = ghost.send("add", {
+                "entity": args.entity, "aspect": args.aspect, "raw_text": args.text,
+                "salience": args.salience, "file_path": args.file, "related_id": args.related
+            }, branch=active_branch)
+            row_id = res.get("id", -1) if res else -1
+        else:
+            row_id = mnemo.add_fact(args.entity, args.aspect, args.text, args.salience, file_path=args.file, related_id=args.related)
+        
         if row_id == -1:
             print(f" {C_GRY}- Ignored by Salience Filter (too noisy/short){C_RST}")
         else:
@@ -90,7 +202,12 @@ def main():
             print(f" {C_GRN}[+] {msg}{C_RST}")
     
     elif args.command == "projects":
-        entities = mnemo.list_entities()
+        if ghost.is_connected:
+            res = ghost.send("list_entities")
+            entities = res.get("entities", []) if res else []
+        else:
+            entities = mnemo.list_entities()
+            
         if not entities:
             print(f" {C_RED}- No project entities found.{C_RST}")
         else:
@@ -98,7 +215,12 @@ def main():
             print(f" {C_MAG}{', '.join(entities)}{C_RST}\n")
 
     elif args.command == "details":
-        d = mnemo.get_memory_details(args.id)
+        if ghost.is_connected:
+            res = ghost.send("details", {"memory_id": args.id})
+            d = res.get("details") if res else None
+        else:
+            d = mnemo.get_memory_details(args.id)
+            
         if not d:
             print(f" {C_RED}- Memory ID {args.id} not found.{C_RST}")
         else:
@@ -115,12 +237,21 @@ def main():
             print(f" {C_MAG}{'-' * 40}{C_RST}\n")
 
     elif args.command == "context":
-        ctx = mnemo.get_context(args.entity, limit=args.limit)
+        if ghost.is_connected:
+            res = ghost.send("context", {"entity": args.entity, "limit": args.limit}, branch=active_branch)
+            ctx = res.get("context", "Error retrieving context") if res else "Error"
+        else:
+            ctx = mnemo.get_context(args.entity, limit=args.limit)
         print(f" {C_MAG}[ACTIVE MINDSET: {args.entity.upper()}]{C_RST}")
         print(f" {C_CYN}{ctx}{C_RST}\n")
 
     elif args.command == "search":
-        results = mnemo.search(args.query)
+        if ghost.is_connected:
+            res = ghost.send("search", {"query": args.query}, branch=active_branch)
+            results = res.get("results", []) if res else []
+        else:
+            results = mnemo.search(args.query)
+            
         if not results:
             print(f" {C_RED}- No matches found.{C_RST}")
         else:
@@ -132,7 +263,11 @@ def main():
             print("")
 
     elif args.command == "list":
-        results = mnemo.list_memories(entity=args.entity)
+        if ghost.is_connected:
+            res = ghost.send("list_memories", {"entity": args.entity}, branch=active_branch)
+            results = res.get("memories", []) if res else [] # Note: route_command returns 'memories' for list_memories? No, I need to check core/ghost.py
+        else:
+            results = mnemo.list_memories(entity=args.entity)
         if not results:
             print(f" {C_RED}- Memory is empty.{C_RST}")
         else:
@@ -159,6 +294,38 @@ def main():
     elif args.command == "purge":
         deleted = mnemo.purge_lethe(days=args.days, min_salience=args.min_salience)
         print(f" {C_MAG}🧹 Lethe Protocol: {C_RST}{C_GRN}{deleted} memories purged (>{args.days}d, salience < {args.min_salience}){C_RST}")
+    
+    elif args.command == "branch":
+        with mnemo._get_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT branch FROM knowledge")
+            branches = [row[0] for row in cursor.fetchall()]
+            
+        active = get_active_branch()
+        print(f" {C_CYN}COGNITIVE BRANCHES:{C_RST}")
+        for b in branches:
+            prefix = f"{C_GRN}* " if b == active else "  "
+            print(f" {prefix}{b}{C_RST}")
+        
+        if args.name and args.name not in branches:
+            print(f" {C_YLW}- Branch '{args.name}' is new and will be created on first 'add'.{C_RST}")
+
+    elif args.command == "checkout":
+        if set_active_branch(args.name):
+            print(f" {C_GRN}✔ Switched to branch '{args.name}'{C_RST}")
+
+    elif args.command == "merge":
+        count = mnemo.merge_branch(args.source, args.target)
+        print(f" {C_GRN}✔ Merged {count} memories from '{args.source}' into '{args.target}'{C_RST}")
+
+    elif args.command == "delete-branch":
+        if args.name == "main":
+            print(f" {C_RED}❌ Cannot delete the 'main' branch.{C_RST}")
+        else:
+            count = mnemo.delete_branch(args.name)
+            if get_active_branch() == args.name:
+                set_active_branch("main")
+            print(f" {C_MAG}🗑  Deleted branch '{args.name}' ({count} memories removed).{C_RST}")
     
     else:
         parser.print_help()

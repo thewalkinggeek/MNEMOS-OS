@@ -1,228 +1,117 @@
 ![MNEMOS-OS Header](assets/img/mnemos-os.png)
 
-MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented development. It eliminates "AI Amnesia" and conversational noise by **distilling** complex developer sessions into high-density **AAAK-Lite shorthand** — providing surgical context, mistake-prevention guardrails, and unbreakable task continuity without bloating the context window or sacrificing privacy.
+# 🧠 MNEMOS-OS: The Memory Kernel for AI
 
+MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented development. It eliminates "AI Amnesia" by **distilling** complex developer sessions into high-density **AAAK-Lite shorthand** — providing surgical context, mistake-prevention guardrails, and unbreakable task continuity without bloating the context window.
 
-> <br>
->
-> ### 🚀 New in v1.1.0 (The Cognition Update)
-> - 🧠 **Relational Memory:** Link decisions to form logic chains (`related_id`).
-> - 🔥 **Active Salience:** High-utility memories stay "hot" in the context window.
-> - 💧 **Memory Hydration:** Agents can "hydrate" shorthand into full reasoning.
-> - 🗺️ **Discovery Protocol:** Query knowledge from across your entire workspace.
->
-> <br>
+> **"Memory is not just storage; it is architecture."**
 
 <br>
 
-![Version](https://img.shields.io/badge/version-v1.1.0-cyan)
+![Version](https://img.shields.io/badge/version-v1.2.0-cyan)
+![Latency](https://img.shields.io/badge/latency-~0.1ms-green)
 ![OS](https://img.shields.io/badge/OS-Windows%20%7C%20Linux%20%7C%20macOS-orange)
-![Language](https://img.shields.io/badge/language-Python-blue)
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 
+<br>
 
-## 📦 Quick Installation
+## 🚀 The v1.2.0 Velocity Update
+- 👻 **Ghost Kernel (IPC):** Near-instant memory access (~0.1ms) via local bridge.
+- 🌿 **Cognitive Branching:** Isolate and merge experimental thoughts like code.
+- 📜 **Recursive Lore:** Automatic context inheritance from parent folders.
+- 🛡️ **Stateless Multi-Agent:** Synchronize multiple AI tools without race conditions.
 
+<br>
+
+> [**Full Update History → Patch Notes**](PATCHNOTES.md)
+
+<br>
+
+## ✨ Key Pillars
+
+### 💎 AAAK-Lite Compression
+90% token savings via technical distillation. 1,000 words become 50 tokens of "Fact-Shorthand" natively readable by LLMs.
+
+### 👻 The Ghost "Hive Mind"
+Synchronize your IDE (Cursor), CLI, and Browser into a single cognitive unit with zero-latency overhead via **Ring -1** IPC.
+
+### 🌿 Cognitive Version Control
+Treat your lore like code. Use `branch` to isolate experiments, `merge` for successful decisions, and `delete` for context cleanliness.
+
+### 📜 Recursive Lore Inheritance
+Architecturally aware context. Files automatically "inherit" memories linked to their parent directories, ensuring your AI never works in a vacuum.
+
+### 🧠 Relational Intelligence
+Link memories into logic chains. Use **Active Salience** to keep high-utility facts "hot" and **Hydration** to expand shorthand reasoning on-demand.
+
+### 🏛️ MÍMIR-DB
+Industrial-grade storage powered by **SQLite 3 with FTS5 and WAL mode** for high-concurrency workloads and sub-millisecond retrieval.
+
+### 🛡️ The Anti-Pattern Vault
+Codify your technical debt. Use the `ANTI` aspect to create guardrails that prevent your AI from repeating known errors or following inefficient paths.
+
+### 🧹 The Lethe Protocol
+Surgically clean your mindset. The built-in Janitor automatically removes stale, low-priority memories based on custom age and salience thresholds.
+
+### 📝 Active Scratchpad
+Unbreakable task continuity. Stores your active multi-step plans so you can switch between agents without losing mission progress.
+
+### ⚡ High-Velocity Interactive CLI
+A professional developer terminal with **Ghost Suggestions**, **Tab Completion**, and live system-metric toolbars.
+
+<br>
+
+## 📈 Performance Benchmarks (v1.2.0)
+
+| Layer | Operation | Latency | Performance Note |
+| :--- | :--- | :--- | :--- |
+| **Pure IPC** | Integrated Agent | **~0.1ms** | Real-time "Neural" access |
+| **Ghost Mode** | CLI IPC Handover | **~50ms** | Zero-lag terminal experience |
+| **Direct Mode** | Python Startup | ~250ms | Standard CLI fallback |
+| **Retrieval** | Context Assembly | < 2.0ms | Sub-millisecond FTS5 lookup |
+| **Ingestion** | Fact Indexing | ~4.0ms | Instant WAL-mode persistence |
+
+### 🚀 The v1.2.0 Velocity Advantage
+*   **Efficiency:** **30x Token Compression** via AAAK-Lite technical shorthand.
+*   **Scalability:** Supports **10+ concurrent agents** without database locking.
+*   **Throughput:** Ghost IPC is **~2,500x faster** than traditional process spawning.
+
+<br>
+
+## 📦 Quick Start
+
+### 1. Installation
 ```bash
 git clone https://github.com/thewalkinggeek/MNEMOS-OS.git
 cd MNEMOS-OS
 ```
-[![Download ZIP](https://img.shields.io/badge/Download-ZIP-orange?style=for-the-badge&logo=github)](https://github.com/thewalkinggeek/MNEMOS-OS/archive/refs/heads/main.zip)
 
-<br>
-
-## ✨ Key Features
-
-### 💎 AAAK-Lite Compression
-MNEMOS compresses your logs into a high-density dialect natively readable by LLMs but taking up **90% fewer tokens**. 1,000 words become 50 tokens of "Fact-Shorthand."
-
-### 🧠 Cognitive Intelligence
-MNEMOS evolves with you. It uses **Active Salience** to keep high-utility memories "hot," **Memory Hydration** to expand shorthand on-demand, and **Relational Linking** to trace reasoning across complex logic chains.
-
-### 🏛️ MÍMIR-DB 
-Powered by **SQLite 3 with FTS5**, MNEMOS provides near-instant context retrieval using relational logic and decay-based priority.
-
-### 🧹 The Lethe Protocol 
-Allows power users to tune their database "noise." The built-in Janitor can be configured to remove stale memories based on custom age and salience thresholds.
-
-### 🛡️ The "Anti-Pattern" Vault
-Track mistakes and dead-ends. Use the `ANTI` aspect to create guardrails that prevent your AI from repeating known errors or following inefficient paths.
-
-### 📝 Active Scratchpad & File-Linking
-Ensures session continuity by storing active multi-step plans. You can also link memories directly to file paths for surgical, file-specific context retrieval.
-
-### ⚡ High-Velocity Interactive CLI
-A text-based terminal with **Ghost Suggestions**, **Tab Completion**, and **Command History**.
-
-<br>
-
-## 📈 Performance Benchmarks
-MNEMOS-OS is engineered for industrial-scale development. In standard stress tests (1,000+ facts):
-*   **Ingestion Speed:** ~3.0ms per fact (real-time indexing).
-*   **Retrieval Latency:** < 5.0ms for full context assembly.
-*   **Search Latency:** < 4.0ms for global keyword search (FTS5).
-*   **Token Density:** Up to **30x compression** for complex architectural logs.
-*   **Storage Efficiency:** ~8,500 tokens saved per 1,000 memories.
-
-<br>
-
-## 🚀 Getting Started
-
-### **For AI Agents (MCP Server)**
-Point your AI tool to the main launcher with the `mcp` argument:
-*   `[PATH]/MNEMOS-OS/mnemos.bat mcp` (Windows)
-*   `[PATH]/MNEMOS-OS/mnemos.sh mcp` (Unix)
-
-**🤖 AI Briefing:** Simply say: *"Read `MNEMOS-OS/INSTRUCTIONS_FOR_AI.md` and brief yourself on my project."*
-
-### **For Humans (Interactive CLI)**
-1. Navigate to the `MNEMOS-OS` folder.
-2. Run **`mnemos.bat`** (Windows) or `./mnemos.sh` (Linux/macOS).
-
----
-
-## 🔌 Advanced Integration Guides
-
-<details>
-<summary><b>♊ Gemini CLI</b></summary>
-
-Run this command to register globally:
+### 2. Launch the Ghost Kernel (Ring -1)
+For zero-latency performance, keep the daemon running in a background terminal:
 ```bash
-gemini mcp add mnemos-os python "[PATH_TO_MNEMOS-OS]/cli/mcp_server.py" --scope user --trust
+python core/ghost.py
 ```
-Or manually edit `%USERPROFILE%\.gemini\settings.json`:
-```json
-{
-  "mcpServers": {
-    "mnemos-os": {
-      "command": "python",
-      "args": ["[PATH_TO_MNEMOS-OS]/cli/mcp_server.py"],
-      "env": { "PYTHONPATH": "[PATH_TO_MNEMOS-OS]" }
-    }
-  }
-}
-```
-</details>
 
-<details>
-<summary><b>🤖 Claude Desktop</b></summary>
-
-Add to `%APPDATA%\Claude\claude_desktop_config.json`:
-```json
-{
-  "mcpServers": {
-    "mnemos-os": {
-      "command": "python",
-      "args": ["[PATH_TO_MNEMOS-OS]/cli/mcp_server.py"],
-      "env": { "PYTHONPATH": "[PATH_TO_MNEMOS-OS]" }
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><b>🐚 Claude Code (CLI)</b></summary>
-
+### 3. Enter the Mindset
+Run the interactive terminal:
 ```bash
-claude mcp add mnemos-os "[PATH_TO_MNEMOS-OS]/mnemos.bat" mcp --scope user
+mnemos.bat  # Windows
+./mnemos.sh # Unix
 ```
-</details>
 
-<details>
-<summary><b>🖱️ Cursor IDE</b></summary>
+<br>
 
-1. Open **Cursor Settings** (`Ctrl + Shift + J`) > **Features** > **MCP**.
-2. **Add new MCP server**:
-   - **Name:** `MNEMOS-OS`
-   - **Type:** `command`
-   - **Command:** `[PATH_TO_MNEMOS-OS]/mnemos.bat mcp`
-</details>
+## 📚 Deep Dive
+Explore the full power of MNEMOS-OS:
 
-<details>
-<summary><b>🏄 Windsurf IDE</b></summary>
+*   [🏗️ **Architecture:** Ghost Kernel & MÍMIR-DB Internals](docs/ARCHITECTURE.md)
+*   [💎 **AAAK-Lite:** The Language Specification](docs/AAAK_LITE.md)
+*   [🛠️ **CLI Reference:** Commands & Terminal Masterclass](docs/CLI.md)
+*   [🔌 **Integration:** Setup for Gemini, Claude, Cursor, & Windsurf](docs/INTEGRATION.md)
 
-1. Open **Settings** > **Advanced** > **Cascade** > **MCP Servers**.
-2. **Add custom server +** and paste:
-```json
-{
-  "mcpServers": {
-    "mnemos-os": {
-      "command": "[PATH_TO_MNEMOS-OS]/mnemos.bat",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-</details>
+<br>
 
 ---
-
-## 🛠️ CLI Command Reference
-
-![MNEMOS-OS CLI Screenshot](assets/img/mnemos-screenshot.png)
-
-
-*   `add <entity> <aspect> "<text>"`: Save a memory. Use your project name as the `<entity>` (e.g., `MyProject`). Use `GLOBAL` for universal preferences. Supports optional `--salience 1-10`, `--file path`, and `--related id`.
-*   `details <id>`: **Hydrate** a shorthand memory into full reasoning and see relational links.
-*   `projects`: List all project entities (knowledge bases) in the system.
-*   `scratch "<plan>"`: Update the active session scratchpad for the current project.
-*   `file "<path>"`: Retrieve memories linked to a specific file (including parent directory context).
-*   `context <entity>`: Retrieve the active mindset (blends project facts + global preferences).
-*   `search "<query>"`: Fast keyword search across all memories and raw content (FTS5).
-*   `list [entity]`: List all memories or all known project entities.
-*   `menu`: Return to the main selection screen.
-*   `purge [--days N] [--min-salience N]`: Tunable cleanup of stale memories.
-
-<br>
-
-## 💡 Usage Tips
-
-### **⌨️ Terminal Masterclass**
-*   **Ghost Text:** Press the **Right Arrow** to accept gray suggestions.
-*   **Tab Completion:** Press **Tab** to cycle commands or memory categories.
-*   **Deep Help:** Type `help` in the terminal for a detailed command guide.
-
-### **🛡️ Advanced Workflows**
-*   **Guardrails:** Use the `ANTI` aspect to teach your AI what *not* to do (e.g., `add MyProject ANTI "Avoid nested loops in render"`).
-*   **Continuity:** Use the `scratch` command before starting complex tasks so your AI never loses the plan.
-*   **Surgical Context:** Use `--file [path]` when adding facts to link them directly to a specific code file.
-
-<br>
-
-## 🗣️ The AAAK-Lite Syntax
-
-| Prefix | Category | Meaning | Example |
-| :--- | :--- | :--- | :--- |
-| `*` | **PREF** | User Preferences | `*vCSS_modular` |
-| `!` | **BUG** | Critical Issues | `!GCal_403_err` |
-| `?` | **ARCH** | Structural Decisions | `?sqlite_fts5_triggers` |
-| `@` | **DEP** | External Dependencies | `@python_sqlite3` |
-| `~` | **ANTI** | Mistakes/Guardrails | `~no_setInterval` |
-| `>` | **LOG** | General Progress | `>core_logic_done` |
-
----
-
-## 📂 Project Architecture
-```text
-/MNEMOS-OS/
-├── .cursorrules        # IDE Protocol (Cursor)
-├── .windsurfrules      # IDE Protocol (Windsurf)
-├── .clinerules         # IDE Protocol (Cline/Roo)
-├── GEMINI.md           # CLI Protocol (Gemini)
-├── INSTRUCTIONS_FOR_AI # Core Memory Mandates
-├── cli/                # Terminal & MCP Server
-├── core/               # Compression & Logic
-└── data/               # MÍMIR-DB (SQLite)
-```
-
-<br>
-
-<br>
-
-## 📄 License & Copyright
 
 Copyright © 2026 **Jonathan Schoenberger**  
 Licensed under the **GNU General Public License v3.0 (GPLv3)**
-
-*"Memory is not just storage; it is architecture."*

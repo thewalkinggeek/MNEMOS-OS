@@ -23,7 +23,7 @@ def main():
     def show_menu():
         os.system('cls' if os.name == 'nt' else 'clear')
         print()
-        print(f" 🧠  {BLU}MNEMOS-OS{RST} {GRY}v1.1.0{RST}")
+        print(f" 🧠  {BLU}MNEMOS-OS{RST} {GRY}v1.2.0{RST}")
         print()
         print(f" {MAG}>{RST} {WHT}The Memory Kernel for AI{RST}")
         print()
