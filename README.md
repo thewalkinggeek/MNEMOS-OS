@@ -12,10 +12,6 @@ The system has evolved from a storage utility into a **"Kernel of Active Reasoni
 2. **Recursive Inheritance (Local Laws):** The AI doesn't just "search" for facts. It inherits the architectural laws of the directory it is standing in. It operates under the "Lore" of its surroundings.
 3. **Cognitive Versioning (Mindset Management):** We treat thoughts like code. By branching and merging context, we manage the AI's **Mental Model**, ensuring experiments never pollute the "Ground Truth" of your project.
 
-### 💎 MÍMIR-Shorthand Preview
-> **Input:** "The user prefers a modular architecture using Express and Postgres."  
-> **MÍMIR:** `*usr_pref_mod_arch_use_express_pg`
-
 **MNEMOS-OS doesn't just help the AI remember; it gives the AI a faster, more organized way to THINK.**
 
 > **"Memory is not just storage; it is architecture."**

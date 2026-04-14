@@ -90,7 +90,7 @@ class GhostKernel:
             elif command == "update_scratchpad":
                 return {"success": self.core.update_scratchpad(**args)}
             elif command == "ping":
-                return {"status": "alive", "version": "1.2.0"}
+                return {"status": "alive", "version": "1.2.1"}
             else:
                 return {"error": f"Unknown command: {command}"}
         except Exception as e:
