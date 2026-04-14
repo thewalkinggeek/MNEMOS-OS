@@ -20,8 +20,8 @@ mcp = FastMCP("MNEMOS-OS")
 core = MnemosCore()
 
 def get_bridge():
-    \"\"\"Helper to get a fresh bridge connection for every request (Stateless).\"\"\"
-    return GhostBridge()
+    """Helper to get a fresh bridge connection for every request (Stateless)."""
+    return GhostBridge(silent=True)
 
 @mcp.tool()
 def add_memory(entity: str, aspect: str, text: str, salience: int = 5, file_path: str = None, related_id: int = None) -> str:

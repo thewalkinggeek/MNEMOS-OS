@@ -29,8 +29,9 @@ import time
 
 class GhostBridge:
     """Zero-latency bridge to the Ghost Kernel daemon."""
-    def __init__(self, autostart=True):
+    def __init__(self, autostart=True, silent=False):
         self.is_connected = False
+        self.silent = silent
         self.pipe_name = r'\\.\pipe\mnemos_ghost' if os.name == 'nt' else '/tmp/mnemos_ghost.sock'
         self._connect()
         if not self.is_connected and autostart and os.environ.get("MNEMOS_NO_AUTOSTART") != "1":
@@ -70,9 +71,12 @@ class GhostBridge:
             else:
                 # Unix Detached Process
                 subprocess.Popen(cmd, preexec_fn=os.setpgrp, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            print(f" {C_YLW}[!] Ghost Kernel offline. Waking up Ring -1 daemon...{C_RST}")
+            
+            if not self.silent:
+                print(f" {C_YLW}[!] Ghost Kernel offline. Waking up Ring -1 daemon...{C_RST}")
         except Exception as e:
-            print(f" {C_RED}[!] Failed to auto-launch Ghost: {e}{C_RST}")
+            if not self.silent:
+                print(f" {C_RED}[!] Failed to auto-launch Ghost: {e}{C_RST}")
 
     def send(self, command, args=None, branch="main"):
         """Sends a command to the Ghost Kernel and returns the response."""

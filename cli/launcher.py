@@ -32,7 +32,7 @@ def main():
         print(f" {WHT}Select Mode:{RST}")
         print()
         print(f" {BLU}[1]{RST} Interactive CLI {GRY}(Standard Use){RST}")
-        print(f" {BLU}[2]{RST} MCP Server {GRY}(AI Connection / Debug){RST}")
+        print(f" {BLU}[2]{RST} MCP Server {GRY}(Manual Debug/Logging Only - Protocol Unstable in Menu){RST}")
         print(f" {BLU}[3]{RST} Ghost Kernel (Ring -1) {GRY}(Zero-Latency Daemon){RST}")
         print()
 

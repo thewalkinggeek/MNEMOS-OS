@@ -20,6 +20,8 @@ All notable changes to the MNEMOS-OS Kernel will be documented in this file.
 
 ### 🛠️ Core Hardening
 - **Persistent Connection Pooling:** Implemented long-lived SQLite connections in the core engine. Reduced latency for all memory operations and eliminated multi-agent file-locking issues.
+- **MCP Protocol Hardening:** Implemented `silent` mode in `GhostBridge` to suppress console output during background daemon auto-launch. This prevents "Protocol Pollution" (stdout noise) from crashing IDE connections (Cursor/Windsurf).
+- **Launcher UX:** Updated the interactive menu to clarify that MCP mode `[2]` is for manual debugging/logging only, as human-readable menus break JSON-RPC communication.
 - **Context Loop Protection:** Added duplicate memory detection to `add_fact`. redundant failure reports are silently discarded within a 1-hour window to prevent context window bloat and AI crashing.
 - **FTS5 Optimization:** Hardened keyword search logic for high-frequency concurrent tool calls.
 
