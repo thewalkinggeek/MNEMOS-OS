@@ -1,12 +1,13 @@
 ﻿venv/
 __pycache__/
 *.pyc
-data/mnemos.db
 data/.history
 .DS_Store
 
 # Local Test DBs
 *.db
+*.db-shm
+*.db-wal
 !data/mnemos.db
 
 # Local Tooling
