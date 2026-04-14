@@ -8,7 +8,7 @@ data/.history
 *.db
 *.db-shm
 *.db-wal
-!data/mnemos.db
+# Removed exception to prevent accidental uploads
 
 # Local Tooling
 manage_mnemos.bat
