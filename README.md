@@ -1,8 +1,18 @@
 ![MNEMOS-OS Header](assets/img/mnemos-os.png)
 
-# 🧠 MNEMOS-OS: The Memory Kernel for AI
+## 🧠 An AI Kernel for Memory and Intelligence 
 
 MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented development. It eliminates "AI Amnesia" by **distilling** complex developer sessions into high-density **AAAK-Lite shorthand** — providing surgical context, mistake-prevention guardrails, and unbreakable task continuity without bloating the context window.
+
+Most AI tools treat memory as a **"Database of Past Events"** — a passive diary that the AI must pause to read. **MNEMOS-OS** is the first implementation of how an AI **LIVES** in that memory. 
+
+We have evolved the system from a storage utility into a **"Kernel of Active Reasoning,"** defined by three unique pillars:
+
+1. **Neural Latency (Ring -1):** Memory isn't "retrieved"; it is felt. At **~0.1ms**, memory access becomes a native reflex, indistinguishable from the AI's own internal weights.
+2. **Recursive Inheritance (Local Laws):** The AI doesn't just "search" for facts. It inherits the architectural laws of the directory it is standing in. It operates under the "Lore" of its surroundings.
+3. **Cognitive Versioning (Mindset Management):** We treat thoughts like code. By branching and merging context, we manage the AI's **Mental Model**, ensuring experiments never pollute the "Ground Truth" of your project.
+
+**MNEMOS-OS doesn't just help the AI remember; it gives the AI a faster, more organized way to THINK.**
 
 > **"Memory is not just storage; it is architecture."**
 
@@ -25,6 +35,7 @@ MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented deve
 <br>
 
 > [**Full Update History → Patch Notes**](PATCHNOTES.md)
+
 
 <br>
 
