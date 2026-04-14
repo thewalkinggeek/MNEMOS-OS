@@ -6,7 +6,7 @@ MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented deve
 
 Most AI tools treat memory as a **"Database of Past Events"** — a passive diary that the AI must pause to read. **MNEMOS-OS** is the first implementation of how an AI **LIVES** in that memory. 
 
-We have evolved the system from a storage utility into a **"Kernel of Active Reasoning,"** defined by three unique pillars:
+The system has evolved from a storage utility into a **"Kernel of Active Reasoning,"** defined by three unique pillars:
 
 1. **Neural Latency (Ring -1):** Memory isn't "retrieved"; it is felt. At **~0.1ms**, memory access becomes a native reflex, indistinguishable from the AI's own internal weights.
 2. **Recursive Inheritance (Local Laws):** The AI doesn't just "search" for facts. It inherits the architectural laws of the directory it is standing in. It operates under the "Lore" of its surroundings.
