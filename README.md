@@ -2,7 +2,7 @@
 
 ## 🧠 An AI Kernel for Memory and Intelligence 
 
-MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented development. It eliminates "AI Amnesia" by **distilling** complex developer sessions into high-density **AAAK-Lite shorthand** — providing surgical context, mistake-prevention guardrails, and unbreakable task continuity without bloating the context window.
+MNEMOS-OS is a local-first, high-performance memory kernel for AI-augmented development. It eliminates "AI Amnesia" by **distilling** complex developer sessions into high-density **MÍMIR-Shorthand** — providing surgical context, mistake-prevention guardrails, and unbreakable task continuity without bloating the context window.
 
 Most AI tools treat memory as a **"Database of Past Events"** — a passive diary that the AI must pause to read. **MNEMOS-OS** is the first implementation of how an AI **LIVES** in that memory. 
 
@@ -18,14 +18,14 @@ The system has evolved from a storage utility into a **"Kernel of Active Reasoni
 
 <br>
 
-![Version](https://img.shields.io/badge/version-v1.2.0-cyan)
+![Version](https://img.shields.io/badge/version-v1.2.1-cyan)
 ![Latency](https://img.shields.io/badge/latency-~0.1ms-green)
 ![OS](https://img.shields.io/badge/OS-Windows%20%7C%20Linux%20%7C%20macOS-orange)
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 <br>
 
-## 🚀 v1.2.0 — The Velocity & Portability Update
+## 🚀 v1.2.1 — The Stability & Integration Update
 - 👻 **Ghost Kernel (Ring -1):** Near-instant memory access (~0.1ms) via IPC.
 - 📦 **Portable Lore:** JSON-based Import/Export for sharing and Git versioning.
 - 🌿 **Cognitive Branching:** Isolate and merge experimental thoughts like code.
@@ -41,7 +41,7 @@ The system has evolved from a storage utility into a **"Kernel of Active Reasoni
 
 ## ✨ Key Pillars
 
-### 💎 AAAK-Lite Compression
+### 💎 MÍMIR-Shorthand Compression
 90% token savings via technical distillation. 1,000 words become 50 tokens of "Fact-Shorthand" natively readable by LLMs.
 
 ### 👻 The Ghost "Hive Mind"
@@ -84,7 +84,7 @@ A professional developer terminal with **Ghost Suggestions**, **Tab Completion**
 | **Ingestion** | Fact Indexing | ~4.0ms | Instant WAL-mode persistence |
 
 ### 🚀 The v1.2.0 Velocity Advantage
-*   **Efficiency:** **30x Token Compression** via AAAK-Lite technical shorthand.
+*   **Efficiency:** **30x Token Compression** via MÍMIR-Shorthand technical shorthand.
 *   **Scalability:** Supports **10+ concurrent agents** without database locking.
 *   **Throughput:** Ghost IPC is **~2,500x faster** than traditional process spawning.
 
@@ -99,13 +99,21 @@ cd MNEMOS-OS
 ```
 
 ### 2. Launch the Ghost Kernel (Ring -1)
-For zero-latency performance, keep the daemon running in a background terminal:
+For zero-latency performance, you can launch the daemon manually in a background CLI window:
+
 ```bash
-python core/ghost.py
+# Option A: Interactive CLI
+mnemos
+# Then select [3] Ghost Kernel
+
+# Option B: Direct Command
+mnemos ghost
 ```
 
+> **Note:** MNEMOS-OS features **Self-Healing IPC**. If the Ghost Kernel is offline, the CLI will automatically attempt to spawn it in the background on your first command.
+
 ### 3. Enter the Mindset
-Run the interactive terminal:
+Run the interactive CLI:
 ```bash
 mnemos.bat  # Windows
 ./mnemos.sh # Unix
@@ -117,8 +125,8 @@ mnemos.bat  # Windows
 Explore the full power of MNEMOS-OS:
 
 *   [🏗️ **Architecture:** Ghost Kernel & MÍMIR-DB Internals](docs/ARCHITECTURE.md)
-*   [💎 **AAAK-Lite:** The Language Specification](docs/AAAK_LITE.md)
-*   [🛠️ **CLI Reference:** Commands & Terminal Masterclass](docs/CLI.md)
+*   [💎 **MÍMIR-Shorthand:** The Language Specification](docs/MIMIR_SHORTHAND.md)
+*   [🛠️ **CLI Reference:** Commands & CLI Masterclass](docs/CLI.md)
 *   [🔌 **Integration:** Setup for Gemini, Claude, Cursor, & Windsurf](docs/INTEGRATION.md)
 
 <br>

@@ -16,10 +16,11 @@ from cli.mnemos import GhostBridge, get_active_branch
 
 # Initialize FastMCP server
 mcp = FastMCP("MNEMOS-OS")
+# MnemosCore now uses persistent connection pooling for speed & stability
 core = MnemosCore()
 
 def get_bridge():
-    """Helper to get a fresh bridge connection for every request (Stateless)."""
+    \"\"\"Helper to get a fresh bridge connection for every request (Stateless).\"\"\"
     return GhostBridge()
 
 @mcp.tool()

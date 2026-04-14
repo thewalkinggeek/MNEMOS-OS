@@ -26,6 +26,7 @@ if exist "requirements.txt" (
 )
 
 :: 3. Routing
+if /i "%~1"=="ghost" goto :RUN_GHOST
 if /i "%~1"=="mcp" goto :RUN_MCP
 if /i "%~1"=="cli" goto :RUN_CLI
 if "%~1"=="" goto :RUN_LAUNCHER
@@ -44,4 +45,8 @@ goto :EOF
 
 :RUN_MCP
 python cli\mcp_server.py
+goto :EOF
+
+:RUN_GHOST
+python cli\mnemos.py ghost
 goto :EOF

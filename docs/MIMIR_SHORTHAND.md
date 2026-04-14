@@ -1,8 +1,8 @@
 [← Back to README](../README.md)
 
-# 💎 AAAK-Lite Specification
+# 💎 MÍMIR-Shorthand Specification
 
-**AAAK-Lite** (Automated Agent Knowledge - Lite) is a compressed dialect designed for high-density AI memory. It prioritizes technical "shorthand" over conversational prose, saving up to 90% on context window tokens.
+**MÍMIR-Shorthand** is a compressed technical dialect designed for high-density AI memory within the MNEMOS-OS ecosystem. It prioritizes semantic "shorthand" over conversational prose, saving up to 90% on context window tokens.
 
 ---
 
@@ -30,8 +30,3 @@ MNEMOS-OS does not store raw prose in the context window. When a fact is saved, 
 ### Example Transformation
 - **Input:** "We decided to use SQLite WAL mode because standard rollback journaling was causing database is locked errors during multi-agent ingest."
 - **Output:** `?use_sqlite_wal_mode_std_rollback_journaling_err_db_locked_multi_agent_ingest`
-
----
-
-## 🎯 Strategic Benefit
-By using AAAK-Lite, MNEMOS-OS can fit **hundreds of architectural lessons** into the same context space that would normally be consumed by just 5 or 10 raw chat logs. It transforms the AI's "Short Term" window into a high-utility "Long Term" technical reference.

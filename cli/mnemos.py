@@ -29,10 +29,15 @@ import time
 
 class GhostBridge:
     """Zero-latency bridge to the Ghost Kernel daemon."""
-    def __init__(self):
+    def __init__(self, autostart=True):
         self.is_connected = False
         self.pipe_name = r'\\.\pipe\mnemos_ghost' if os.name == 'nt' else '/tmp/mnemos_ghost.sock'
         self._connect()
+        if not self.is_connected and autostart and os.environ.get("MNEMOS_NO_AUTOSTART") != "1":
+            self.launch_ghost()
+            # Wait briefly for the daemon to initialize the IPC channel
+            time.sleep(1.5)
+            self._connect()
 
     def _connect(self):
         try:
@@ -50,6 +55,24 @@ class GhostBridge:
                 self.is_connected = True
         except Exception:
             self.is_connected = False
+
+    def launch_ghost(self):
+        """Spawns the Ghost Kernel as a detached background process (Self-Healing)."""
+        import subprocess
+        # Use sys.executable to ensure we use the same venv
+        cmd = [sys.executable, os.path.abspath(__file__), "ghost"]
+        try:
+            if os.name == 'nt':
+                # Windows Detached Process flags
+                DETACHED_PROCESS = 0x00000008
+                CREATE_NEW_PROCESS_GROUP = 0x00000200
+                subprocess.Popen(cmd, creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP, close_fds=True)
+            else:
+                # Unix Detached Process
+                subprocess.Popen(cmd, preexec_fn=os.setpgrp, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print(f" {C_YLW}[!] Ghost Kernel offline. Waking up Ring -1 daemon...{C_RST}")
+        except Exception as e:
+            print(f" {C_RED}[!] Failed to auto-launch Ghost: {e}{C_RST}")
 
     def send(self, command, args=None, branch="main"):
         """Sends a command to the Ghost Kernel and returns the response."""
@@ -183,7 +206,10 @@ def main():
     import_parser = subparsers.add_parser("import", help="Import memories from a JSON file")
     import_parser.add_argument("file", help="Source JSON file path")
 
-    # 16. Help
+    # 16. Ghost Kernel (v1.2.1)
+    subparsers.add_parser("ghost", help="Launch the Ghost Kernel (Ring -1) zero-latency daemon")
+
+    # 17. Help
     help_parser = subparsers.add_parser("help", help="Show this help message and exit")
 
     args = parser.parse_args()
@@ -191,6 +217,20 @@ def main():
     if args.command == "help":
         parser.print_help()
         sys.exit(0)
+
+    if args.command == "ghost":
+        print(f" {C_BLU}👻 MNEMOS-OS GHOST KERNEL (Ring -1){C_RST}")
+        print(f" {C_GRY}Starting zero-latency IPC daemon...{C_RST}")
+        from core.ghost import GhostKernel
+        try:
+            kernel = GhostKernel()
+            kernel.start()
+        except KeyboardInterrupt:
+            print(f"\n {C_RED}[!] Ghost Kernel descending into the void...{C_RST}")
+            sys.exit(0)
+        except Exception as e:
+            print(f" {C_RED}❌ Error launching Ghost Kernel: {e}{C_RST}")
+            sys.exit(1)
 
     if args.command == "add":
         if ghost.is_connected:

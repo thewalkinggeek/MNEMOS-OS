@@ -2,11 +2,37 @@
 
 # 🛠️ CLI Command Reference
 
-MNEMOS-OS provides both a high-velocity **Interactive Terminal** and a standard **Script Interface**.
+MNEMOS-OS provides both a high-velocity **Interactive CLI** and a standard **Script Interface**.
 
 ---
 
-## ⌨️ Basic Commands
+## 👻 Zero-Latency IPC (Ghost Mode)
+
+MNEMOS-OS uses a background daemon for Ring -1 performance.
+
+### `ghost`
+Launches the Ghost Kernel IPC listener. 
+- **Latency:** ~0.1ms retrieval for integrated agents (MCP/IDE).
+- **Protocol:** Windows Named Pipes or Unix Domain Sockets.
+- **Backgrounding:** For best performance, keep this running in a separate CLI window.
+- **Self-Healing:** If the Ghost Kernel is offline, the CLI will automatically attempt to spawn it in the background on your first command.
+
+### `mcp`
+Launches the Model Context Protocol (MCP) server directly.
+
+---
+
+## 🚀 The Launcher Menu
+Run `mnemos` (or `mnemos.bat` / `./mnemos.sh`) without arguments to enter the integrated launcher:
+
+1. **Interactive CLI:** The primary UI for humans.
+2. **MCP Server:** The primary UI for AI agents (Cursor, Claude, etc.).
+3. **Ghost Kernel:** The zero-latency daemon for Ring -1 performance.
+
+---
+...
+## 💡 Interactive CLI Masterclass
+Run `mnemos.bat` or `./mnemos.sh` without arguments to enter the **Ghost CLI**.
 
 ### `add <entity> <aspect> "<text>"`
 Saves a memory to the MÍMIR-DB.
@@ -54,7 +80,7 @@ Exports memories to a JSON file.
   - `--entity <name>`: Optional: Only export memories for a specific project.
 
 ### `import <file>`
-Imports memories from a JSON file. Automatically handles AAAK-Lite distillation for raw text in the import.
+Imports memories from a JSON file. Automatically handles MÍMIR-Shorthand distillation for raw text in the import.
 
 ---
 
@@ -65,8 +91,8 @@ Imports memories from a JSON file. Automatically handles AAAK-Lite distillation 
 
 ---
 
-## 💡 Interactive Terminal Masterclass
-Run `mnemos.bat` or `./mnemos.sh` without arguments to enter the **Ghost Terminal**.
+## 💡 Interactive CLI Masterclass
+Run `mnemos.bat` or `./mnemos.sh` without arguments to enter the **Ghost CLI**.
 
 - **Ghost Text:** Real-time suggestions based on your history. Press **Right Arrow** to accept.
 - **Tab Completion:** Press **Tab** to cycle through commands, entities, or aspects.

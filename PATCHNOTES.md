@@ -4,7 +4,32 @@ All notable changes to the MNEMOS-OS Kernel will be documented in this file.
 
 ---
 
-## [v1.2.0] - The Velocity & Portability Update (2026-04-13)
+## [v1.2.1] - The Stability & Integration Update (2026-04-13)
+*Refining the zero-latency experience with unified integration and hardened core stability.*
+
+### 👻 Unified Ghost Integration
+- **Direct Launch:** Added the `ghost` command to the CLI for starting the daemon (`mnemos ghost`).
+- **Launcher Integration:** Added the Ghost Kernel as a selectable option [3] in the interactive menu.
+- **Startup Sync:** Updated `mnemos.bat` and `mnemos.sh` to support direct Ghost routing.
+- **Micro-Latency Logging:** Added real-time IPC request logging with micro-second precision (e.g., `[CONTEXT] 0.15ms`).
+
+### 📦 Portability (JSON Serialization)
+- **JSON Export:** Added `mnemos export <file>` to dump project brains into a structured, diff-friendly JSON format. 
+- **JSON Import:** Added `mnemos import <file>` to populate the MÍMIR-DB from a lore package. Automatically handles MÍMIR-Shorthand distillation for raw text.
+- **Git Synchronization:** Lore can now be committed to version control and shared across teams.
+
+### 🛠️ Core Hardening
+- **Persistent Connection Pooling:** Implemented long-lived SQLite connections in the core engine. Reduced latency for all memory operations and eliminated multi-agent file-locking issues.
+- **Context Loop Protection:** Added duplicate memory detection to `add_fact`. redundant failure reports are silently discarded within a 1-hour window to prevent context window bloat and AI crashing.
+- **FTS5 Optimization:** Hardened keyword search logic for high-frequency concurrent tool calls.
+
+### 🧹 Maintenance & Cleanup
+- **Git Hygiene:** Performed a complete history scrub to remove binary database files (`mnemos.db`) from the repository history.
+- **Hardened Gitignore:** Updated rules to protect all user-specific state, including local DBs, environment secrets, and IDE caches.
+
+---
+
+## [v1.2.0] - The Velocity Update (2026-04-13)
 *This massive update focuses on radical performance gains, multi-agent stability, and knowledge portability.*
 
 ### 👻 Ghost Kernel (Ring -1)
@@ -15,7 +40,7 @@ All notable changes to the MNEMOS-OS Kernel will be documented in this file.
 
 ### 📦 Portability (JSON Serialization)
 - **JSON Export:** Added `mnemos export <file>` to dump project brains into a structured, diff-friendly JSON format. 
-- **JSON Import:** Added `mnemos import <file>` to populate the MÍMIR-DB from a lore package. Automatically handles AAAK-Lite distillation for raw text.
+- **JSON Import:** Added `mnemos import <file>` to populate the MÍMIR-DB from a lore package. Automatically handles MÍMIR-Shorthand distillation for raw text.
 - **Git Synchronization:** Lore can now be committed to version control and shared across teams.
 
 ### 🌿 Cognitive Version Control
@@ -26,12 +51,8 @@ All notable changes to the MNEMOS-OS Kernel will be documented in this file.
 - **Recursive Lore:** Enhanced `get_file_context` to traverse directory hierarchies. Files now automatically inherit architectural rules from parent folders.
 - **Context Clarity:** Added explicit source tags (`[CORE]`, `[EXTERNAL: PROJECT]`) to prevent reasoning pollution.
 
-### 🛡️ Safety & Documentation
-- **Observation vs. Action:** Hardened the AI mandate to distinguish between autonomous memory preservation (background) and manual code implementation (foreground).
-- **Documentation Refactor:** Refactored the README into a high-impact landing page and moved heavy technical specifications into `/docs`.
-
 ### 🐛 Bug Fixes
-- **Terminal UI Logic:** Fixed a critical gap where `branch`, `merge`, and `import/export` logic were missing from the interactive terminal (`terminal.py`).
+- **CLI UI Logic:** Fixed a critical gap where `branch`, `merge`, and `import/export` logic were missing from the interactive terminal (`terminal.py`).
 - **Tab-Completion Metadata:** Resolved a bug where command descriptions were not appearing in the Ghost Suggestions menu.
 - **Windows Unicode Stability:** Fixed `UnicodeEncodeError` on Windows terminals by replacing emojis with robust ASCII markers in the Ghost Kernel.
 - **Multi-Instance Concurrency:** Increased Windows Named Pipe max instances to 10, enabling simultaneous connections for multiple AI agents.
@@ -48,7 +69,7 @@ All notable changes to the MNEMOS-OS Kernel will be documented in this file.
 - **Usage Heat:** Introduced usage tracking to keep high-utility memories "hot" in the context window.
 
 ### 💧 Memory Hydration
-- **Shorthand expansion:** Added the `details` tool, allowing agents to expand dense AAAK-Lite shorthand into full technical reasoning.
+- **Shorthand expansion:** Added the `details` tool, allowing agents to expand dense MÍMIR-Shorthand into full technical reasoning.
 
 ### 🏛️ Discovery Protocol
 - **Cross-Project Intelligence:** Added the ability to query known entities and project lists from a single interface.
@@ -56,9 +77,9 @@ All notable changes to the MNEMOS-OS Kernel will be documented in this file.
 ---
 
 ## [v1.0.0] - Initial Release (2026-04-11)
-*The birth of the MÍMIR-DB and the AAAK-Lite specification.*
+*The birth of the MÍMIR-DB and the MÍMIR-Shorthand specification.*
 
 - 🏛️ **MÍMIR-DB:** Initial SQLite 3 implementation with FTS5.
-- 💎 **AAAK-Lite:** Introduction of the technical shorthand dialect for context window efficiency.
+- 💎 **MÍMIR-Shorthand:** Introduction of the technical shorthand dialect for context window efficiency.
 - ⚡ **Interactive CLI:** Basic terminal with tab-completion and history.
 - 🔌 **MCP Server:** Foundation for tool-based AI memory integration.

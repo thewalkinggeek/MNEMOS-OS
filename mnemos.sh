@@ -28,7 +28,10 @@ if [ -f "requirements.txt" ]; then
 fi
 
 # 5. Routing
-if [ "$1" == "mcp" ]; then
+if [ "$1" == "ghost" ]; then
+    python3 cli/mnemos.py ghost
+    exit $?
+elif [ "$1" == "mcp" ]; then
     python3 cli/mcp_server.py
     exit $?
 elif [ "$1" == "cli" ]; then

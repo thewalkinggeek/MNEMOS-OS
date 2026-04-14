@@ -25,12 +25,19 @@ class GhostKernel:
     def __init__(self):
         self.core = MnemosCore()
         self.running = True
-        print(f"[*] Ghost Kernel active. (Branch: {self.core.branch})")
+        self.start_time = time.time()
+        # ANSI Colors
+        self.C_CYN = "\033[96m"
+        self.C_GRY = "\033[90m"
+        self.C_RST = "\033[0m"
+        self.C_BLU = "\033[94;1m"
+        
+        print(f" {self.C_BLU}[*] Ghost Kernel active.{self.C_RST} {self.C_GRY}(Branch: {self.core.branch}){self.C_RST}")
 
     def handle_client(self, handle):
-        """Processes a single IPC request."""
+        """Processes a single IPC request with micro-second precision logging."""
+        start = time.time()
         try:
-            # Read request
             if os.name == 'nt':
                 resp, data = win32file.ReadFile(handle, 65536)
                 request = json.loads(data.decode('utf-8'))
@@ -42,18 +49,19 @@ class GhostKernel:
             args = request.get("args", {})
             branch = request.get("branch", "main")
             
-            # Route to Core Engine
             result = self.route_command(command, args, branch)
             
-            # Send response
             response_data = json.dumps(result).encode('utf-8')
             if os.name == 'nt':
                 win32file.WriteFile(handle, response_data)
             else:
                 handle.sendall(response_data)
                 
+            elapsed = (time.time() - start) * 1000
+            print(f" {self.C_GRY}[{command.upper()}] {elapsed:.2f}ms{self.C_RST}")
+                
         except Exception as e:
-            print(f"Error handling client: {e}")
+            print(f" [!] Error: {e}")
         finally:
             if os.name == 'nt':
                 win32file.CloseHandle(handle)

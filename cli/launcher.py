@@ -23,7 +23,7 @@ def main():
     def show_menu():
         os.system('cls' if os.name == 'nt' else 'clear')
         print()
-        print(f" 🧠  {BLU}MNEMOS-OS{RST} {GRY}v1.2.0{RST}")
+        print(f" 🧠  {BLU}MNEMOS-OS{RST} {GRY}v1.2.1{RST}")
         print()
         print(f" {MAG}>{RST} {WHT}The Memory Kernel for AI{RST}")
         print()
@@ -31,8 +31,9 @@ def main():
         print()
         print(f" {WHT}Select Mode:{RST}")
         print()
-        print(f" {BLU}[1]{RST} Interactive Terminal {GRY}(Standard Use){RST}")
+        print(f" {BLU}[1]{RST} Interactive CLI {GRY}(Standard Use){RST}")
         print(f" {BLU}[2]{RST} MCP Server {GRY}(AI Connection / Debug){RST}")
+        print(f" {BLU}[3]{RST} Ghost Kernel (Ring -1) {GRY}(Zero-Latency Daemon){RST}")
         print()
 
     show_menu()
@@ -60,9 +61,17 @@ def main():
                 print()
                 subprocess.run([sys.executable, os.path.join("cli", "mcp_server.py")])
                 return
+
+            elif choice == "3":
+                print()
+                print(f" {MAG}[*]{RST} Launching Ghost Kernel...")
+                print(f" {GRY}[NOTE] This daemon will run in the background for zero-latency AI access.{RST}")
+                print()
+                subprocess.run([sys.executable, os.path.join("cli", "mnemos.py"), "ghost"])
+                return
                 
             else:
-                print(f" {RED}Invalid selection. Please enter 1 or 2.{RST}")
+                print(f" {RED}Invalid selection. Please enter 1, 2, or 3.{RST}")
                 
         except KeyboardInterrupt:
             print()
