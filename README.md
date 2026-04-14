@@ -8,9 +8,13 @@ Most AI tools treat memory as a **"Database of Past Events"** — a passive diar
 
 The system has evolved from a storage utility into a **"Kernel of Active Reasoning,"** defined by three unique pillars:
 
-1. **Neural Latency (Ring -1):** Memory isn't "retrieved"; it is felt. At **~0.1ms**, memory access becomes a native reflex, indistinguishable from the AI's own internal weights.
+1. **Neural Latency (Ring -1):** Memory isn't "retrieved"; it is lived. At **~0.1ms** via Ghost IPC, context injection becomes a native reflex, indistinguishable from the AI's own internal weights.
 2. **Recursive Inheritance (Local Laws):** The AI doesn't just "search" for facts. It inherits the architectural laws of the directory it is standing in. It operates under the "Lore" of its surroundings.
 3. **Cognitive Versioning (Mindset Management):** We treat thoughts like code. By branching and merging context, we manage the AI's **Mental Model**, ensuring experiments never pollute the "Ground Truth" of your project.
+
+### 💎 MÍMIR-Shorthand Preview
+> **Input:** "The user prefers a modular architecture using Express and Postgres."  
+> **MÍMIR:** `*usr_pref_mod_arch_use_express_pg`
 
 **MNEMOS-OS doesn't just help the AI remember; it gives the AI a faster, more organized way to THINK.**
 
@@ -73,7 +77,7 @@ A professional developer terminal with **Ghost Suggestions**, **Tab Completion**
 
 <br>
 
-## 📈 Performance Benchmarks (v1.2.0)
+## 📈 Performance Benchmarks (v1.2.1)
 
 | Layer | Operation | Latency | Performance Note |
 | :--- | :--- | :--- | :--- |
@@ -83,7 +87,7 @@ A professional developer terminal with **Ghost Suggestions**, **Tab Completion**
 | **Retrieval** | Context Assembly | < 2.0ms | Sub-millisecond FTS5 lookup |
 | **Ingestion** | Fact Indexing | ~4.0ms | Instant WAL-mode persistence |
 
-### 🚀 The v1.2.0 Velocity Advantage
+### 🚀 The v1.2.1 Velocity Advantage
 *   **Efficiency:** **30x Token Compression** via MÍMIR-Shorthand technical shorthand.
 *   **Scalability:** Supports **10+ concurrent agents** without database locking.
 *   **Throughput:** Ghost IPC is **~2,500x faster** than traditional process spawning.
