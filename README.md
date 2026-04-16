@@ -18,31 +18,39 @@ The system has evolved from a storage utility into a **"Kernel of Active Reasoni
 
 <br>
 
-![Version](https://img.shields.io/badge/version-v1.2.1-cyan)
+![Version](https://img.shields.io/badge/version-v1.2.2-cyan)
 ![Latency](https://img.shields.io/badge/latency-~0.1ms-green)
 ![OS](https://img.shields.io/badge/OS-Windows%20%7C%20Linux%20%7C%20macOS-orange)
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 <br>
 
-## 🚀 v1.2.1 — The Stability & Integration Update
-- 👻 **Ghost Kernel (Ring -1):** Near-instant memory access (~0.1ms) via IPC.
-- 📦 **Portable Lore:** JSON-based Import/Export for sharing and Git versioning.
-- 🌿 **Cognitive Branching:** Isolate and merge experimental thoughts like code.
-- 📜 **Recursive Lore:** Automatic context inheritance from parent folders.
-- 🛡️ **Stateless Multi-Agent:** Synchronize multiple AI tools without race conditions.
+## 🚀 v1.2.2 — The Token Economy Update
+- 📉 **Adaptive Hydration (Low-Power Mode):** Slash token usage by **80%** with shorthand-only context.
+- 🎯 **Surgical Pre-Filtering:** Locally prioritize memories relevant to your current file or task.
+- 🤖 **Local Distillation:** Use **Ollama** (Phi-3/Mistral) for free, offline memory summarization.
+- 🛡️ **Executable Guardrails:** Store regex patterns for local, non-AI bug detection.
+- 👻 **Phantom Ghost:** Silent, windowless background daemon auto-launch on Windows.
 
 <br>
 
 > [**Full Update History → Patch Notes**](PATCHNOTES.md)
 
-
 <br>
 
 ## ✨ Key Pillars
 
+### 📉 Token Economy & Surgical Context
+MNEMOS-OS v1.2.2 introduces **Adaptive Hydration**. By default, the system serves high-density **MÍMIR-Shorthand**, using **90% fewer tokens** than raw text. Context is only "Hydrated" (expanded) when the AI specifically requests deeper reasoning. 
+
+### 🤖 The Offline Housekeeper
+Eliminate "Main" AI costs for technical housekeeping. By setting `MNEMOS_LOCAL_DISTILL=phi3`, MNEMOS-OS offloads all memory summarization to a local **Ollama** instance, ensuring your API budget is spent on code, not notes.
+
+### 🛡️ Executable Guardrails
+Transform `BUG` and `ANTI` memories into **Active Defense**. By attaching a `regex_pattern` to a memory, the Ghost Kernel can perform high-speed local scans to warn you about unsafe patterns before the AI even sees them.
+
 ### 💎 MÍMIR-Shorthand Compression
-90% token savings via technical distillation. 1,000 words become 50 tokens of "Fact-Shorthand" natively readable by LLMs.
+1,000 words become 50 tokens of "Fact-Shorthand" natively readable by LLMs.
 
 ### 👻 The Ghost "Hive Mind"
 Synchronize your IDE (Cursor), CLI, and Browser into a single cognitive unit with zero-latency overhead via **Ring -1** IPC.
@@ -50,42 +58,21 @@ Synchronize your IDE (Cursor), CLI, and Browser into a single cognitive unit wit
 ### 🌿 Cognitive Version Control
 Treat your lore like code. Use `branch` to isolate experiments, `merge` for successful decisions, and `delete` for context cleanliness.
 
-### 📜 Recursive Lore Inheritance
-Architecturally aware context. Files automatically "inherit" memories linked to their parent directories, ensuring your AI never works in a vacuum.
-
-### 🧠 Relational Intelligence
-Link memories into logic chains. Use **Active Salience** to keep high-utility facts "hot" and **Hydration** to expand shorthand reasoning on-demand.
-
-### 🏛️ MÍMIR-DB
-Industrial-grade storage powered by **SQLite 3 with FTS5 and WAL mode** for high-concurrency workloads and sub-millisecond retrieval.
-
-### 🛡️ The Anti-Pattern Vault
-Codify your technical debt. Use the `ANTI` aspect to create guardrails that prevent your AI from repeating known errors or following inefficient paths.
-
-### 🧹 The Lethe Protocol
-Surgically clean your mindset. The built-in Janitor automatically removes stale, low-priority memories based on custom age and salience thresholds.
-
-### 📝 Active Scratchpad
-Unbreakable task continuity. Stores your active multi-step plans so you can switch between agents without losing mission progress.
-
-### ⚡ High-Velocity Interactive CLI
-A professional developer terminal with **Ghost Suggestions**, **Tab Completion**, and live system-metric toolbars.
-
 <br>
 
-## 📈 Performance Benchmarks (v1.2.1)
+## 📈 Performance Benchmarks (v1.2.2)
 
 | Layer | Operation | Latency | Performance Note |
 | :--- | :--- | :--- | :--- |
 | **Pure IPC** | Integrated Agent | **~0.1ms** | Real-time "Neural" access |
-| **Ghost Mode** | CLI IPC Handover | **~50ms** | Zero-lag terminal experience |
-| **Direct Mode** | Python Startup | ~250ms | Standard CLI fallback |
-| **Retrieval** | Context Assembly | < 2.0ms | Sub-millisecond FTS5 lookup |
-| **Ingestion** | Fact Indexing | ~4.0ms | Instant WAL-mode persistence |
+| **Context Shield** | Debounced Request | **~3.7ms** | **100% Token Savings** on redundant calls |
+| **Retrieval** | Surgical Filter + Guardrail | **~6.3ms** | Zero-token local bug defense |
+| **Full Engine** | Cold Start Retrieval | ~30.0ms | Standard SQLite/FTS5 lookup |
+| **Distillation** | Local AI (Ollama) | ~500ms | **Free** offline summarization |
 
-### 🚀 The v1.2.1 Velocity Advantage
-*   **Efficiency:** **30x Token Compression** via MÍMIR-Shorthand technical shorthand.
-*   **Scalability:** Supports **10+ concurrent agents** without database locking.
+### 🚀 The v1.2.2 Velocity Advantage
+*   **Cost-Efficient:** **90% Cumulative Savings** via Token Shield (Debouncing).
+*   **Guardrails:** Detects architectural violations in **< 7ms** locally.
 *   **Throughput:** Ghost IPC is **~2,500x faster** than traditional process spawning.
 
 <br>
@@ -98,26 +85,27 @@ git clone https://github.com/thewalkinggeek/MNEMOS-OS.git
 cd MNEMOS-OS
 ```
 
-### 2. Launch the Ghost Kernel (Ring -1)
-For zero-latency performance, you can launch the daemon manually in a background CLI window:
-
-```bash
-# Option A: Interactive CLI
-mnemos
-# Then select [3] Ghost Kernel
-
-# Option B: Direct Command
-mnemos ghost
-```
-
-> **Note:** MNEMOS-OS features **Self-Healing IPC**. If the Ghost Kernel is offline, the CLI will automatically attempt to spawn it in the background on your first command.
-
-### 3. Enter the Mindset
-Run the interactive CLI:
+### 2. Enter the Mindset (Direct Launch)
+Running the primary script now takes you **straight into the Interactive Terminal**.
 ```bash
 mnemos.bat  # Windows
-./mnemos.sh # Unix
+./mnemos.sh # Linux/macOS
 ```
+
+### 3. (Optional) Setup Local Distillation
+To save API tokens on memory summarization:
+1.  Install [Ollama](https://ollama.com/).
+2.  Run `ollama pull phi3`.
+3.  Set `MNEMOS_LOCAL_DISTILL=phi3` in your environment.
+
+### 4. Advanced Routing (Subcommands)
+MNEMOS-OS now supports direct subcommands for power users:
+```bash
+mnemos ghost  # Launch the zero-latency daemon in foreground
+mnemos mcp    # Launch the MCP server in debug mode
+```
+
+> **Note:** You no longer need to start the Ghost Kernel manually for daily use. The system features **Self-Healing IPC** and will wake up the daemon silently on your first command.
 
 <br>
 

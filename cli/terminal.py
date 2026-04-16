@@ -42,7 +42,7 @@ mnemos_style = Style.from_dict({
 
 class MnemosCompleter(Completer):
     def __init__(self):
-        self.commands = ['add', 'context', 'scratch', 'file', 'list', 'search', 'purge', 'exit', 'help', 'menu', 'details', 'projects', 'branch', 'checkout', 'merge', 'delete-branch', 'export', 'import']
+        self.commands = ['add', 'context', 'scratch', 'file', 'list', 'search', 'purge', 'exit', 'help', 'details', 'projects', 'branch', 'checkout', 'merge', 'delete-branch', 'export', 'import']
         self.aspects = ['PREF', 'BUG', 'ARCH', 'DEP', 'LOG', 'ANTI']
         self.examples = {
             'add': 'Archive a project fact, decision, or preference',
@@ -60,7 +60,6 @@ class MnemosCompleter(Completer):
             'export': 'Dump project lore into a JSON file',
             'import': 'Load a technical lore package from JSON',
             'purge': 'Clean stale, low-salience data from Mimir-DB',
-            'menu': 'Return to the main launcher menu',
             'help': 'View the detailed command guide',
             'exit': 'Securely disconnect from the memory kernel'
         }
@@ -115,7 +114,7 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
 
     # 2. Splash Header (Fixed tag names to match style keys)
-    print_formatted_text(HTML('\n 🧠  <branding>MNEMOS-OS</branding> <version>v1.2.1</version>\n'), style=mnemos_style)
+    print_formatted_text(HTML('\n 🧠  <branding>MNEMOS-OS</branding> <version>v1.2.2</version>\n'), style=mnemos_style)
     print_formatted_text(HTML(' <magenta>&gt;</magenta> <white><b>The Memory Kernel for AI</b></white>\n'), style=mnemos_style)
     print_formatted_text(HTML(' <gray>----------------------------------</gray>\n'), style=mnemos_style)
     
@@ -260,9 +259,8 @@ def main():
                 print_formatted_text(HTML(f' <magenta>* Purged {deleted} memories (older than {days} days, salience &lt; {min_salience}).</magenta>'), style=mnemos_style)
 
             elif cmd == 'branch':
-                name = args[1] if len(args) >= 2 else None
-                with mnemo._get_conn() as conn:
-                    cursor = conn.cursor()
+                with mnemo.conn:
+                    cursor = mnemo.conn.cursor()
                     cursor.execute("SELECT DISTINCT branch FROM knowledge")
                     branches = [row[0] for row in cursor.fetchall()]
                 
@@ -272,9 +270,6 @@ def main():
                 for b in branches:
                     prefix = HTML('<success>* </success>') if b == active else '  '
                     print_formatted_text(HTML(f' {prefix}{b}'), style=mnemos_style)
-                
-                if name and name not in branches:
-                    print_formatted_text(HTML(f' <yellow>- Branch "{name}" is new and will be created on first "add".</yellow>'), style=mnemos_style)
                 print("")
 
             elif cmd == 'checkout' and len(args) >= 2:
@@ -321,9 +316,6 @@ def main():
                 else:
                     print_formatted_text(HTML(f' <success>* Imported {count} memories from "{file_path}"</success>'), style=mnemos_style)
 
-            elif cmd == 'menu':
-                sys.exit(100)
-
             elif cmd == 'help' or cmd == '?':
                 print_formatted_text(HTML(f'\n <magenta>--- MNEMOS COMMAND GUIDE ---</magenta>'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>add &lt;entity&gt; &lt;aspect&gt; "text"</yellow>'), style=mnemos_style)
@@ -343,8 +335,8 @@ def main():
                 print_formatted_text(HTML(f'    <gray>Find memories matching keywords using high-speed FTS5.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>list [entity]</yellow>'), style=mnemos_style)
                 print_formatted_text(HTML(f'    <gray>Browse all stored memories, optionally filtered by project.</gray>\n'), style=mnemos_style)
-                print_formatted_text(HTML(f'  <yellow>branch [name]</yellow>'), style=mnemos_style)
-                print_formatted_text(HTML(f'    <gray>List cognitive branches or prepare a new one for creation.</gray>\n'), style=mnemos_style)
+                print_formatted_text(HTML(f'  <yellow>branch</yellow>'), style=mnemos_style)
+                print_formatted_text(HTML(f'    <gray>List all known cognitive branches.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>checkout &lt;name&gt;</yellow>'), style=mnemos_style)
                 print_formatted_text(HTML(f'    <gray>Switch the active cognitive branch context.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>merge &lt;source&gt; [--target main]</yellow>'), style=mnemos_style)
@@ -357,13 +349,11 @@ def main():
                 print_formatted_text(HTML(f'    <gray>Import a lore package into the Mimir-DB.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <yellow>purge [--days N] [--min-salience N]</yellow>'), style=mnemos_style)
                 print_formatted_text(HTML(f'    <gray>Surgically clean old, low-salience memories from the DB.</gray>\n'), style=mnemos_style)
-                print_formatted_text(HTML(f'  <yellow>menu</yellow>'), style=mnemos_style)
-                print_formatted_text(HTML(f'    <gray>Return to the main mode selection screen.</gray>\n'), style=mnemos_style)
                 print_formatted_text(HTML(f'  <error>exit</error> or <error>quit</error>'), style=mnemos_style)
                 print_formatted_text(HTML(f'    <gray>Securely disconnect from the memory kernel.</gray>\n'), style=mnemos_style)
             
             else:
-                if cmd not in ['add', 'context', 'search', 'purge', 'scratch', 'file', 'menu', 'list', 'branch', 'checkout', 'merge', 'delete-branch', 'export', 'import']:
+                if cmd not in ['add', 'context', 'search', 'purge', 'scratch', 'file', 'list', 'branch', 'checkout', 'merge', 'delete-branch', 'export', 'import']:
                     print_formatted_text(HTML(f' <error>[!] Unknown command. Type "help" for info.</error>'), style=mnemos_style)
                 else:
                     print_formatted_text(HTML(f' <error>[!] Missing arguments for "{cmd}".</error>'), style=mnemos_style)

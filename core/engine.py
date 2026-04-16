@@ -64,6 +64,9 @@ class MnemosCore:
             cursor.execute("ALTER TABLE knowledge ADD COLUMN branch TEXT DEFAULT 'main'")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_knowledge_branch_entity ON knowledge(branch, entity)")
         
+        if 'regex_pattern' not in columns:
+            cursor.execute("ALTER TABLE knowledge ADD COLUMN regex_pattern TEXT")
+        
         # 2. Migrate scratchpad table (Drop/Recreate for new PK structure)
         cursor.execute("PRAGMA table_info(scratchpad)")
         sp_columns = [col[1] for col in cursor.fetchall()]
@@ -205,7 +208,7 @@ class MnemosCore:
             self.conn.commit()
 
 
-    def add_fact(self, entity, aspect, raw_text, salience=5, file_path=None, related_id=None, branch_name=None):
+    def add_fact(self, entity, aspect, raw_text, salience=5, file_path=None, related_id=None, branch_name=None, regex_pattern=None):
         """Compresses and saves a fact to the Mimir-DB."""
         active_branch = branch_name or self.branch
         
@@ -220,9 +223,9 @@ class MnemosCore:
         
         cursor = self.conn.cursor()
         cursor.execute("""
-            INSERT INTO knowledge (entity, aspect, shorthand, raw_content, salience, related_id, branch)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (entity.upper(), aspect.upper(), shorthand, raw_text, salience, related_id, active_branch))
+            INSERT INTO knowledge (entity, aspect, shorthand, raw_content, salience, related_id, branch, regex_pattern)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (entity.upper(), aspect.upper(), shorthand, raw_text, salience, related_id, active_branch, regex_pattern))
         row_id = cursor.lastrowid
         
         if file_path:
@@ -235,10 +238,39 @@ class MnemosCore:
         return row_id
 
     def distill(self, aspect, text):
-        """MÍMIR-Shorthand Distillation (15-word limit for better nuance preservation)."""
+        """MÍMIR-Shorthand Distillation. Supports local AI via Ollama if MNEMOS_LOCAL_DISTILL is set."""
+        local_model = os.environ.get("MNEMOS_LOCAL_DISTILL")
         prefixes = {"PREF": "*", "BUG": "!", "ARCH": "?", "DEP": "@", "LOG": ">", "ANTI": "~"}
         prefix = prefixes.get(aspect.upper(), "~")
         
+        if local_model:
+            # Attempt Local AI Distillation (Ollama)
+            try:
+                import urllib.request
+                import json
+                
+                prompt = f"Distill this technical {aspect} note into a dense 5-8 word shorthand (e.g., use_sqlite_storage). Use underscores instead of spaces. NO PREAMBLE. Text: {text}"
+                data = json.dumps({
+                    "model": local_model,
+                    "prompt": prompt,
+                    "stream": False
+                }).encode("utf-8")
+                
+                req = urllib.request.Request("http://localhost:11434/api/generate", data=data, method="POST")
+                req.add_header("Content-Type", "application/json")
+                
+                with urllib.request.urlopen(req, timeout=5) as f:
+                    resp = json.loads(f.read().decode("utf-8"))
+                    ai_shorthand = resp.get("response", "").strip().lower().replace(" ", "_")
+                    if ai_shorthand and len(ai_shorthand) > 2:
+                        # Clean AI output (remove prefix if AI added one)
+                        if ai_shorthand[0] in prefixes.values(): ai_shorthand = ai_shorthand[1:]
+                        return f"{prefix}{ai_shorthand}"
+            except Exception as e:
+                # Fallback to Regex if Ollama fails or isn't running
+                pass
+
+        # Regex-based Distillation (Fast Fallback)
         mapping = {
             "user": "usr", "prefers": "pref", "prefer": "pref", "architecture": "arch", 
             "database": "db", "resolved": "res", "error": "err", "function": "fn", 
@@ -283,29 +315,110 @@ class MnemosCore:
             }
         return None
 
-    def get_context(self, entity, limit=15, include_scratchpad=True, branch_name=None):
-        """Assembles context with Active Salience and Cross-Project Intelligence."""
-        context_parts = []
-        entity = entity.upper()
-        active_branch = branch_name or self.branch
-        cursor = self.conn.cursor()
+    def _run_guardrails(self, file_path, entity, branch_name):
+        """Scans a file for regex patterns defined in ANTI/BUG memories. Zero-token defense."""
+        if not file_path or not os.path.exists(file_path):
+            return []
         
-        # 1. Get Scratchpad for the current branch
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT id, shorthand, regex_pattern FROM knowledge 
+            WHERE (entity = ? OR entity = 'CORE') 
+            AND (branch = ? OR branch = 'main')
+            AND regex_pattern IS NOT NULL
+        """, (entity.upper(), branch_name))
+        
+        rules = cursor.fetchall()
+        if not rules:
+            return []
+            
+        try:
+            # High-speed local read
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except:
+            return []
+            
+        import re
+        triggered = []
+        for r_id, shorthand, pattern in rules:
+            try:
+                # Compiled regex check
+                if re.search(pattern, content, re.MULTILINE | re.IGNORECASE):
+                    triggered.append(f"🛑 GUARDRAIL: {shorthand} [ID:{r_id}] detected in {os.path.basename(file_path)}")
+            except:
+                continue 
+        return triggered
+
+    def get_context(self, entity, limit=15, include_scratchpad=True, branch_name=None, auto_hydrate=True, relevant_to=None, file_path=None, last_hash=None):
+        """Assembles context with Active Salience, Pre-Filtering, Guardrails, and Dependencies.
+           `last_hash` enables Context Debouncing (Token Savings).
+        """
+        import hashlib
+        active_branch = branch_name or self.branch
+        entity = entity.upper()
+        
+        # 1. Dependency Mapping (Implicit Look-Around)
+        extra_filters = []
+        if file_path and os.path.exists(file_path):
+            try:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    # Scan first 30 lines for imports
+                    head = [f.readline() for _ in range(30)]
+                    import_text = "".join(head).lower()
+                    
+                    # Pull DEP memories for any mentioned libraries
+                    cursor = self.conn.cursor()
+                    cursor.execute("SELECT DISTINCT entity FROM knowledge WHERE aspect = 'DEP'")
+                    known_deps = [r[0] for r in cursor.fetchall()]
+                    for dep in known_deps:
+                        if dep.lower() in import_text:
+                            extra_filters.append(dep)
+            except: pass
+
+        # 2. Assemble Content (Parts)
+        context_parts = []
+        
+        # 2a. Guardrails
+        if file_path:
+            warnings = self._run_guardrails(file_path, entity, active_branch)
+            if warnings:
+                context_parts.append("[ACTIVE GUARDRAILS TRIGGERED]\n" + "\n".join(warnings))
+
+        # 2b. Scratchpad
         if include_scratchpad:
+            cursor = self.conn.cursor()
             cursor.execute("SELECT content FROM scratchpad WHERE branch = ?", (active_branch,))
             row = cursor.fetchone()
             if not row and active_branch != 'main':
                 cursor.execute("SELECT content FROM scratchpad WHERE branch = 'main'")
                 row = cursor.fetchone()
             if row:
-                context_parts.append(f"[SCRATCHPAD] {row['content']}")
+                context_parts.append(f"[SCRATCHPAD] {row[0]}")
 
-        # 2. Local & Global Context Mix (Filtered by Branch)
-        cursor.execute("""
+        # 3. Retrieval with Dependency Injection
+        boosted_ids = []
+        if relevant_to:
+            safe_q = f'"{relevant_to}"'
+            try:
+                cursor.execute("""
+                    SELECT rowid FROM knowledge_search 
+                    WHERE knowledge_search MATCH ? AND (branch = ? OR branch = 'main')
+                    LIMIT 5
+                """, (safe_q, active_branch))
+                boosted_ids = [r[0] for r in cursor.fetchall()]
+            except: pass
+
+        # Build combined entity filter
+        entities = [entity, 'CORE'] + extra_filters
+        ent_placeholders = ",".join(["?"] * len(entities))
+
+        query = f"""
             SELECT id, entity, shorthand, raw_content, salience, priority FROM (
                 WITH ranked_knowledge AS (
                     SELECT id, entity, shorthand, raw_content, salience, usage_count, branch,
                         CASE 
+                                WHEN id IN ({','.join(['?']*len(boosted_ids)) if boosted_ids else '-1'}) THEN (salience * 100)
                                 WHEN salience >= 9 THEN (salience * 10) + (usage_count * 2)
                                 ELSE (salience * 10) + (usage_count * 2) - (julianday('now') - julianday(created_at))
                         END as priority
@@ -313,45 +426,48 @@ class MnemosCore:
                     WHERE (branch = ? OR branch = 'main')
                 )
                 SELECT id, entity, shorthand, raw_content, salience, priority, 1 as is_local FROM ranked_knowledge 
-                WHERE entity = ? OR entity = 'CORE'
+                WHERE entity IN ({ent_placeholders})
                 
                 UNION ALL
                 
                 SELECT id, entity, shorthand, raw_content, salience, priority, 0 as is_local FROM (
                     SELECT * FROM ranked_knowledge 
-                    WHERE entity != ? AND entity != 'CORE' AND usage_count > 0
+                    WHERE entity NOT IN ({ent_placeholders}) AND usage_count > 0
                     ORDER BY usage_count DESC LIMIT 3
                 )
             )
             ORDER BY is_local DESC, priority DESC
             LIMIT ?
-        """, (active_branch, entity, entity, limit))
+        """
         
+        cursor.execute(query, (*boosted_ids, active_branch, *entities, *entities, limit))
         rows = cursor.fetchall()
+        
         if rows:
             facts = []
             for row in rows:
                 mem_id, ent, shorthand, raw, salience = row['id'], row['entity'], row['shorthand'], row['raw_content'], row['salience']
-                if ent == entity:
-                    prefix = ""
-                elif ent == 'CORE':
-                    prefix = "[CORE] "
-                else:
-                    prefix = f"[EXTERNAL: {ent}] "
-                    
-                if salience >= 9:
+                prefix = "" if ent == entity else (f"[{ent}] " if ent == 'CORE' else f"[{ent}] ")
+                if salience >= 9 and auto_hydrate:
                     facts.append(f"{prefix}{shorthand} [ID:{mem_id}] (FULL: {raw})")
                 else:
                     facts.append(f"{prefix}{shorthand} [ID:{mem_id}]")
             
             context_parts.append(" | ".join(facts))
             
+            # Update last_accessed
             ids = [row['id'] for row in rows]
-            placeholders = ','.join(['?'] * len(ids))
-            cursor.execute(f"UPDATE knowledge SET last_accessed = CURRENT_TIMESTAMP WHERE id IN ({placeholders})", ids)
+            cursor.execute(f"UPDATE knowledge SET last_accessed = CURRENT_TIMESTAMP WHERE id IN ({','.join(['?']*len(ids))})", ids)
             self.conn.commit()
+
+        full_text = "\n".join(context_parts) if context_parts else "No prior context found."
         
-        return "\n".join(context_parts) if context_parts else "No prior context found."
+        # 4. Context Debouncing (Hashing)
+        new_hash = hashlib.md5(full_text.encode('utf-8')).hexdigest()
+        if last_hash and last_hash == new_hash:
+            return "[CONTEXT_UNCHANGED]"
+            
+        return f"[HASH:{new_hash}]\n{full_text}"
 
     def get_file_context(self, file_path):
         """Retrieves memories linked to this file or any of its parent directories."""
@@ -385,9 +501,14 @@ class MnemosCore:
 
 
     def update_scratchpad(self, content, branch_name=None):
-        """Updates the persistent session scratchpad for the current branch."""
+        """Updates the persistent session scratchpad. Supports structured JSON task lists."""
         active_branch = branch_name or self.branch
         cursor = self.conn.cursor()
+        
+        # If content is a list/dict, serialize to JSON
+        if isinstance(content, (list, dict)):
+            content = json.dumps(content)
+            
         cursor.execute("""
             INSERT INTO scratchpad (branch, content, updated_at)
             VALUES (?, ?, CURRENT_TIMESTAMP)
@@ -397,6 +518,36 @@ class MnemosCore:
         """, (active_branch, content))
         self.conn.commit()
         return True
+
+    def update_task(self, task_id, status, branch_name=None):
+        """Granularly updates a specific task within the structured scratchpad JSON."""
+        active_branch = branch_name or self.branch
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT content FROM scratchpad WHERE branch = ?", (active_branch,))
+        row = cursor.fetchone()
+        
+        if not row:
+            return False
+            
+        try:
+            tasks = json.loads(row[0])
+            if not isinstance(tasks, list):
+                return False
+                
+            updated = False
+            for task in tasks:
+                if str(task.get("id")) == str(task_id):
+                    task["status"] = status
+                    task["updated_at"] = datetime.now().isoformat()
+                    updated = True
+                    break
+            
+            if updated:
+                self.update_scratchpad(tasks, branch_name=active_branch)
+                return True
+        except:
+            return False
+        return False
 
 
     def search(self, query, branch_name=None):

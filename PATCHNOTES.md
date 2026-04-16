@@ -2,6 +2,33 @@
 
 All notable changes to the MNEMOS-OS Kernel will be documented in this file.
 
+## [v1.2.2] - The Token Economy & Stability Update (2026-04-16)
+*Slashing AI costs and hardening IPC performance for high-concurrency environments.*
+
+### 🚀 Zero-Friction UX
+- **Transparent Launcher:** Removed the startup mode selection menu. Running `mnemos` now routes directly to the Interactive Terminal by default.
+- **Unified Subcommands:** Added support for `mnemos ghost` and `mnemos mcp` directly from the primary entry point, aligning with industry-standard CLI patterns.
+
+### 📉 Token Economy
+- **Adaptive Hydration (Low-Power Mode):** Introduced the `auto_hydrate` parameter to the `get_context` core and MCP tool. When disabled, the kernel serves only 15-word shorthands, reducing per-prompt token overhead by **~80%**.
+- **Surgical Pre-Filtering:** The `get_context` tool now accepts a `relevant_to` parameter (e.g., a filename or keyword). The Ghost Kernel uses FTS5 locally to prioritize relevant memories, ensuring the AI receives a precise briefing instead of a general project dump.
+- **Local AI Distillation:** Memory summarization can now be offloaded to a local **Ollama** instance (e.g., Phi-3) via the `MNEMOS_LOCAL_DISTILL` environment variable, eliminating the "Main" AI token cost for housekeeping.
+- **Context Throttling:** Initial implementation of token-aware context management to prevent prompt bloat.
+
+### 🛡️ Active Guardrails (Phase 2)
+- **Zero-Token Local Defense:** Implemented a high-speed local scanner in the Ghost Kernel. By attaching a `regex_pattern` to an `ANTI` or `BUG` memory, the kernel will automatically scan the active file and inject a **Hard Warning** into the context if a violation is detected. This prevents known mistakes before the AI even finishes generating code.
+- **Extended Schema:** Added the `regex_pattern` column to the core MÍMIR-DB and FTS5 search index.
+
+### 🧠 Core Reflexes (The "Final Trinity")
+- **Atomic Task State:** Upgraded the `scratchpad` to a structured JSON state machine. Added the `update_task` tool, allowing AI agents to track mission progress programmatically with a "Checklist Reflex."
+- **Implicit Dependency Mapping:** The kernel now automatically scans active files for `import` statements and injects relevant `DEP` (Dependency) memories into the context without being asked.
+- **Context Debouncing (The Token Shield):** Implemented high-speed context hashing. If a request is identical to the previous one, the Ghost Kernel returns `[CONTEXT_UNCHANGED]`, saving **100% of tokens** for that turn.
+
+### 🐛 Bug Fixes
+- **Windows "Phantom Window" Suppression:** Resolved a bug where the Ghost Kernel auto-launch would trigger visible console windows. The daemon now runs in a fully detached, windowless state.
+- **Protocol Protection:** Implemented `stdout` redirection during MCP server initialization. Stray debug prints from sub-modules now route to `stderr`, preventing JSON-RPC corruption and eliminating long "Thinking" hangs in IDEs.
+- **Self-Healing IPC:** Refined the GhostBridge connection handshake to ensure the daemon is ready before serving the first request.
+
 ---
 
 ## [v1.2.1] - The Stability & Integration Update (2026-04-13)

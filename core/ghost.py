@@ -78,6 +78,7 @@ class GhostKernel:
             if command == "add":
                 return {"id": self.core.add_fact(**args)}
             elif command == "context":
+                # Ensure auto_hydrate is passed if present
                 return {"context": self.core.get_context(**args)}
             elif command == "search":
                 return {"results": self.core.search(**args)}
@@ -89,8 +90,10 @@ class GhostKernel:
                 return {"results": self.core.list_memories(**args)}
             elif command == "update_scratchpad":
                 return {"success": self.core.update_scratchpad(**args)}
+            elif command == "update_task":
+                return {"success": self.core.update_task(**args)}
             elif command == "ping":
-                return {"status": "alive", "version": "1.2.1"}
+                return {"status": "alive", "version": "1.2.2"}
             else:
                 return {"error": f"Unknown command: {command}"}
         except Exception as e:

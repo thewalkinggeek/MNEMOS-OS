@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS knowledge (
     usage_count INTEGER DEFAULT 0, -- Tracks how often this memory is hydrated
     related_id INTEGER REFERENCES knowledge(id) ON DELETE SET NULL, -- Relational link
     branch TEXT DEFAULT 'main', -- Cognitive isolation branch
+    regex_pattern TEXT, -- For local non-AI matching
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_accessed DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -34,14 +35,15 @@ CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_search USING fts5(
     shorthand,
     raw_content,
     branch,
+    regex_pattern,
     tokenize="unicode61" -- Supports better cross-language matching
 );
 
 -- 3. Triggers to keep the Search Index synchronized with the Core Table
 -- Since we are now using an internal-content FTS table, we manually sync.
 CREATE TRIGGER IF NOT EXISTS knowledge_ai AFTER INSERT ON knowledge BEGIN
-  INSERT INTO knowledge_search(rowid, entity, aspect, shorthand, raw_content, branch) 
-  VALUES (new.id, new.entity, new.aspect, new.shorthand, new.raw_content, new.branch);
+  INSERT INTO knowledge_search(rowid, entity, aspect, shorthand, raw_content, branch, regex_pattern) 
+  VALUES (new.id, new.entity, new.aspect, new.shorthand, new.raw_content, new.branch, new.regex_pattern);
 END;
 
 CREATE TRIGGER IF NOT EXISTS knowledge_ad AFTER DELETE ON knowledge BEGIN
@@ -50,8 +52,8 @@ END;
 
 CREATE TRIGGER IF NOT EXISTS knowledge_au AFTER UPDATE ON knowledge BEGIN
   DELETE FROM knowledge_search WHERE rowid = old.id;
-  INSERT INTO knowledge_search(rowid, entity, aspect, shorthand, raw_content, branch) 
-  VALUES (new.id, new.entity, new.aspect, new.shorthand, new.raw_content, new.branch);
+  INSERT INTO knowledge_search(rowid, entity, aspect, shorthand, raw_content, branch, regex_pattern) 
+  VALUES (new.id, new.entity, new.aspect, new.shorthand, new.raw_content, new.branch, new.regex_pattern);
 END;
 
 -- 4. The Active Scratchpad (Session Continuity)

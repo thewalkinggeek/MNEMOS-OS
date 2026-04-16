@@ -67,7 +67,14 @@ class GhostBridge:
                 # Windows Detached Process flags
                 DETACHED_PROCESS = 0x00000008
                 CREATE_NEW_PROCESS_GROUP = 0x00000200
-                subprocess.Popen(cmd, creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP, close_fds=True)
+                CREATE_NO_WINDOW = 0x08000000
+                subprocess.Popen(
+                    cmd, 
+                    creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW, 
+                    stdout=subprocess.DEVNULL, 
+                    stderr=subprocess.DEVNULL,
+                    close_fds=True
+                )
             else:
                 # Unix Detached Process
                 subprocess.Popen(cmd, preexec_fn=os.setpgrp, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

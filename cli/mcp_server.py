@@ -16,8 +16,18 @@ from cli.mnemos import GhostBridge, get_active_branch
 
 # Initialize FastMCP server
 mcp = FastMCP("MNEMOS-OS")
-# MnemosCore now uses persistent connection pooling for speed & stability
-core = MnemosCore()
+
+# MnemosCore and GhostBridge initialization can emit prints that corrupt the MCP stdout stream.
+# We redirect stdout to stderr during this phase.
+_real_stdout = sys.stdout
+sys.stdout = sys.stderr
+
+try:
+    # MnemosCore now uses persistent connection pooling for speed & stability
+    core = MnemosCore()
+finally:
+    # Restore stdout for MCP transport
+    sys.stdout = _real_stdout
 
 def get_bridge():
     """Helper to get a fresh bridge connection for every request (Stateless)."""
@@ -50,18 +60,42 @@ def add_memory(entity: str, aspect: str, text: str, salience: int = 5, file_path
     return msg
 
 @mcp.tool()
-def get_context(entity: str, limit: int = 15) -> str:
+def get_context(entity: str, limit: int = 15, auto_hydrate: bool = True, relevant_to: str = None, file_path: str = None, last_hash: str = None) -> str:
     """
     Retrieves the active mindset, including the scratchpad and shorthand facts.
+    Set auto_hydrate=False for "Low-Power" mode to save tokens.
+    Use relevant_to for "Surgical Pre-Filtering."
+    Provide file_path to trigger "Active Guardrails" and "Implicit Dependency Mapping."
+    Provide last_hash to enable "Context Debouncing" (returns [CONTEXT_UNCHANGED] if identical).
     """
     branch = get_active_branch()
     ghost = get_bridge()
     
     if ghost.is_connected:
-        res = ghost.send("context", {"entity": entity, "limit": limit}, branch=branch)
+        res = ghost.send("context", {
+            "entity": entity, "limit": limit, "auto_hydrate": auto_hydrate, 
+            "relevant_to": relevant_to, "file_path": file_path, "last_hash": last_hash
+        }, branch=branch)
         return res.get("context", "Error retrieving context via Ghost.") if res else "Ghost connection failed."
     
-    return core.get_context(entity, limit=limit, branch_name=branch)
+    return core.get_context(entity, limit=limit, branch_name=branch, auto_hydrate=auto_hydrate, relevant_to=relevant_to, file_path=file_path, last_hash=last_hash)
+
+@mcp.tool()
+def update_task(task_id: str, status: str) -> str:
+    """
+    Granularly updates a specific task status in the structured scratchpad JSON.
+    Statuses: pending, in_progress, done, failed, validated
+    """
+    branch = get_active_branch()
+    ghost = get_bridge()
+    
+    if ghost.is_connected:
+        res = ghost.send("update_task", {"task_id": task_id, "status": status}, branch=branch)
+        success = res.get("success", False) if res else False
+    else:
+        success = core.update_task(task_id, status, branch_name=branch)
+        
+    return "Task updated successfully." if success else "Failed to update task. Ensure scratchpad contains a JSON task list."
 
 @mcp.tool()
 def get_file_memory(file_path: str) -> str:
