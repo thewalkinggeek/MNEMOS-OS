@@ -138,6 +138,15 @@ def main():
                 continue
                 
             if user_input.lower() in ['exit', 'quit']:
+                # Check if Ghost is running and offer to kill it
+                from cli.mnemos import GhostBridge
+                ghost = GhostBridge(autostart=False, silent=True)
+                if ghost.is_connected:
+                    print_formatted_text(HTML(' <yellow>! Ghost Kernel is still active in the background.</yellow>'), style=mnemos_style)
+                    confirm = session.prompt(HTML(' <white>Shut down the background daemon? (y/N): </white>'))
+                    if confirm.lower() == 'y':
+                        ghost.send("stop")
+                        print_formatted_text(HTML(' <success>* Ghost Kernel terminated.</success>'), style=mnemos_style)
                 break
 
             try:

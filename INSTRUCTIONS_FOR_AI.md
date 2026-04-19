@@ -19,6 +19,18 @@ You are connected via MCP. Use the following tools directly:
 
 ---
 
+## 🛡️ The Fallback Protocol (When Tools Fail)
+If the MCP tools (`add_memory`, `get_context`, etc.) are not available in your environment or return an error, you **MUST** use the following shell commands to maintain the MÍMIR-DB:
+
+*   **Add Memory:** `mnemos.bat add [entity] [aspect] "[text]"`
+*   **Get Context:** `mnemos.bat context [entity]`
+*   **Search:** `mnemos.bat search "[query]"`
+*   **Scratchpad:** `mnemos.bat scratch "[plan]"`
+
+*(Use `./mnemos.sh` on Linux/macOS)*
+
+---
+
 ## 🧠 The "Briefing" Protocol
 At the start of every new session or project switch, you **MUST**:
 1.  **Load Identity:** Run `get_context("CORE")`. 

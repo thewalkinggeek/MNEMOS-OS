@@ -134,8 +134,22 @@ class MnemosCore:
         self.conn.commit()
         return count
 
+    def _is_safe_path(self, path):
+        """Ensures the path is within the current working directory (Workspace Boundary)."""
+        if not path: return False
+        try:
+            abs_path = os.path.abspath(path)
+            cwd = os.getcwd()
+            # Use commonpath to ensure it's a true subdirectory and not just a prefix match
+            return os.path.commonpath([abs_path, cwd]) == cwd
+        except:
+            return False
+
     def export_json(self, file_path, entity=None, branch_name=None):
         """Exports memories to a JSON file for portability."""
+        if not self._is_safe_path(file_path):
+            raise PermissionError(f"Access Denied: Path '{file_path}' is outside the workspace.")
+            
         active_branch = branch_name or self.branch
         cursor = self.conn.cursor()
         query = "SELECT entity, aspect, shorthand, raw_content, salience, branch FROM knowledge WHERE (branch = ? OR branch = 'main')"
@@ -164,7 +178,7 @@ class MnemosCore:
 
     def import_json(self, file_path):
         """Imports memories from a JSON file."""
-        if not os.path.exists(file_path):
+        if not self._is_safe_path(file_path) or not os.path.exists(file_path):
             return -1
             
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -317,7 +331,7 @@ class MnemosCore:
 
     def _run_guardrails(self, file_path, entity, branch_name):
         """Scans a file for regex patterns defined in ANTI/BUG memories. Zero-token defense."""
-        if not file_path or not os.path.exists(file_path):
+        if not file_path or not self._is_safe_path(file_path) or not os.path.exists(file_path):
             return []
         
         cursor = self.conn.cursor()
@@ -360,7 +374,7 @@ class MnemosCore:
         
         # 1. Dependency Mapping (Implicit Look-Around)
         extra_filters = []
-        if file_path and os.path.exists(file_path):
+        if file_path and self._is_safe_path(file_path) and os.path.exists(file_path):
             try:
                 with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                     # Scan first 30 lines for imports
@@ -596,5 +610,14 @@ class MnemosCore:
         cursor.execute("SELECT (SELECT COUNT(*) FROM knowledge), (SELECT COUNT(DISTINCT entity) FROM knowledge)")
         res = cursor.fetchone()
         return {"facts": res[0], "entities": res[1]}
+
+    def close(self):
+        """Explicitly closes the database connection and WAL file."""
+        if self.conn:
+            try:
+                self.conn.close()
+                self.conn = None
+            except:
+                pass
 
 

@@ -94,47 +94,58 @@ class GhostKernel:
                 return {"success": self.core.update_task(**args)}
             elif command == "ping":
                 return {"status": "alive", "version": "1.2.2"}
+            elif command == "stop":
+                self.running = False
+                return {"status": "descending"}
             else:
                 return {"error": f"Unknown command: {command}"}
         except Exception as e:
             return {"error": str(e)}
 
     def run_windows(self):
-        """Windows-specific Named Pipe listener loop."""
-        print(f"[*] Listening on {PIPE_NAME}")
-        while self.running:
-            try:
-                handle = win32pipe.CreateNamedPipe(
-                    PIPE_NAME,
-                    win32pipe.PIPE_ACCESS_DUPLEX,
-                    win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_READMODE_MESSAGE | win32pipe.PIPE_WAIT,
-                    10, 65536, 65536, 0, None
-                )
-                win32pipe.ConnectNamedPipe(handle, None)
-                threading.Thread(target=self.handle_client, args=(handle,)).start()
-            except Exception as e:
-                print(f"Pipe error: {e}")
-                time.sleep(1)
+        """Windows-specific Named Pipe listener loop with multi-instancing."""
+        print(f"[*] Listening on {PIPE_NAME} (Multi-Instance)")
+        
+        def pipe_worker():
+            while self.running:
+                handle = None
+                try:
+                    handle = win32pipe.CreateNamedPipe(
+                        PIPE_NAME,
+                        win32pipe.PIPE_ACCESS_DUPLEX,
+                        win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_READMODE_MESSAGE | win32pipe.PIPE_WAIT,
+                        20, 65536, 65536, 0, None
+                    )
+                    win32pipe.ConnectNamedPipe(handle, None)
+                    # Start a new thread for this specific client to free up this pipe worker immediately
+                    threading.Thread(target=self.handle_client, args=(handle,), daemon=True).start()
+                except Exception as e:
+                    if handle:
+                        win32file.CloseHandle(handle)
+                    if self.running:
+                        time.sleep(0.1)
 
-    def run_unix(self):
-        """Unix-specific Socket listener loop."""
-        if os.path.exists(SOCKET_PATH):
-            os.remove(SOCKET_PATH)
-        
-        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        server.bind(SOCKET_PATH)
-        server.listen(5)
-        print(f"[*] Listening on {SOCKET_PATH}")
-        
+        # Start multiple workers to ensure at least one is always waiting for ConnectNamedPipe
+        for _ in range(5):
+            threading.Thread(target=pipe_worker, daemon=True).start()
+            
         while self.running:
-            client, _ = server.accept()
-            threading.Thread(target=self.handle_client, args=(client,)).start()
+            time.sleep(0.5)
 
     def start(self):
         if os.name == 'nt':
+            # run_windows now manages its own life cycle and workers
             self.run_windows()
         else:
-            self.run_unix()
+            listener_thread = threading.Thread(target=self.run_unix, daemon=True)
+            listener_thread.start()
+            # Keep the main thread alive until 'stop' command is received
+            while self.running:
+                time.sleep(0.5)
+            
+        print(f" {self.C_GRY}[!] Closing MÍMIR-DB connections...{self.C_RST}")
+        self.core.close()
+        print(f" {self.C_BLU}[✔] Ghost Kernel successfully descended into the void.{self.C_RST}")
 
 if __name__ == "__main__":
     ghost = GhostKernel()

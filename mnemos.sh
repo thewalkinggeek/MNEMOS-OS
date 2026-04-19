@@ -28,7 +28,23 @@ if [ -f "requirements.txt" ]; then
 fi
 
 # 5. Routing
-if [ "$1" == "ghost" ]; then
+if [ "$1" == "setup" ]; then
+    echo "[MNEMOS-OS SETUP]"
+    echo "- Ensuring dependencies are installed..."
+    python3 -m pip install -r requirements.txt -q
+    echo "- Registering MNEMOS-OS MCP Server with Gemini CLI..."
+    # Get the absolute path to this script
+    SCRIPT_PATH="$(realpath "$0")"
+    if command -v gemini &> /dev/null; then
+        gemini mcp add mnemos-os "$SCRIPT_PATH" mcp
+        echo "[+] MNEMOS-OS MCP Server registered successfully."
+    else
+        echo "[!] Gemini CLI not found. Please manually register using:"
+        echo "    gemini mcp add mnemos-os \"$SCRIPT_PATH\" mcp"
+    fi
+    echo "[✔] Setup complete."
+    exit 0
+elif [ "$1" == "ghost" ]; then
     python3 cli/mnemos.py ghost
     exit $?
 elif [ "$1" == "mcp" ]; then

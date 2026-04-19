@@ -26,6 +26,7 @@ if exist "requirements.txt" (
 )
 
 :: 3. Routing
+if /i "%~1"=="setup" goto :RUN_SETUP
 if /i "%~1"=="ghost" goto :RUN_GHOST
 if /i "%~1"=="mcp" goto :RUN_MCP
 if /i "%~1"=="cli" goto :RUN_CLI
@@ -33,6 +34,24 @@ if "%~1"=="" goto :RUN_LAUNCHER
 
 :: Argument Mode (Pass-through)
 python cli\mnemos.py %*
+goto :EOF
+
+:RUN_SETUP
+echo [MNEMOS-OS SETUP]
+echo - Ensuring dependencies are installed...
+python -m pip install -r requirements.txt -q
+echo - Registering MNEMOS-OS MCP Server with Gemini CLI...
+:: Use the full path to the batch script itself for the MCP command
+set "SCRIPT_PATH=%~f0"
+gemini mcp add mnemos-os "%SCRIPT_PATH%" mcp 2>nul
+if errorlevel 1 (
+    echo [!] Gemini CLI not found or registration failed.
+    echo [!] Please manually add the MCP server using:
+    echo     gemini mcp add mnemos-os "%SCRIPT_PATH%" mcp
+) else (
+    echo [+] MNEMOS-OS MCP Server registered successfully.
+)
+echo [✔] Setup complete. Use 'mnemos mcp' to verify.
 goto :EOF
 
 :RUN_LAUNCHER

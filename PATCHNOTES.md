@@ -2,6 +2,20 @@
 
 All notable changes to the MNEMOS-OS Kernel will be documented in this file.
 
+## [v1.2.3] - The IPC Hardening & Integrity Update (2026-04-18)
+*Resolving critical file-locking issues and stabilizing high-concurrency IPC.*
+
+### 👻 IPC Hardening
+- **Multi-Instance Named Pipes:** Re-engineered the Windows Ghost Kernel listener to support multi-instance Named Pipes. This eliminates "Pipe Busy" errors and allows multiple AI agents to communicate with the kernel simultaneously.
+- **Stateless GhostBridge:** Refactored the `GhostBridge` connection logic to be fully stateless. Every request now establishes a fresh connection, increasing reliability for long-lived sessions.
+
+### 🛡️ Security & Integrity
+- **Workspace Boundary Enforcement:** Implemented strict path validation in the `MnemosCore` engine. All file system operations (Guardrails, Dependency Mapping, Import/Export) are now restricted to the current working directory, preventing AI agents from accidentally or maliciously accessing files outside the workspace.
+
+### 🐛 Bug Fixes
+- **Graceful Resource Release:** Implemented explicit SQLite closure in the Ghost Kernel's `stop` command. This resolves the "File Locking on Exit" bug, ensuring `mnemos.db` is immediately accessible after the daemon descends.
+- **GhostBridge Connection Drops:** Fixed a race condition where reusable handles would cause "Pipe Ended" errors in high-frequency tool-call environments.
+
 ## [v1.2.2] - The Token Economy & Stability Update (2026-04-16)
 *Slashing AI costs and hardening IPC performance for high-concurrency environments.*
 

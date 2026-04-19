@@ -79,14 +79,19 @@ Treat your lore like code. Use `branch` to isolate experiments, `merge` for succ
 
 ## 📦 Quick Start
 
-### 1. Installation
+### 1. Installation & Integration
+Register the Memory Protocol with your AI environment (Gemini CLI, Cursor, etc.).
 ```bash
 git clone https://github.com/thewalkinggeek/MNEMOS-OS.git
 cd MNEMOS-OS
+
+# Run the setup script to register the MCP server
+mnemos.bat setup   # Windows
+./mnemos.sh setup  # Linux/macOS
 ```
 
 ### 2. Enter the Mindset (Direct Launch)
-Running the primary script now takes you **straight into the Interactive Terminal**.
+Running the primary script takes you into the Interactive Terminal.
 ```bash
 mnemos.bat  # Windows
 ./mnemos.sh # Linux/macOS
@@ -99,13 +104,14 @@ To save API tokens on memory summarization:
 3.  Set `MNEMOS_LOCAL_DISTILL=phi3` in your environment.
 
 ### 4. Advanced Routing (Subcommands)
-MNEMOS-OS now supports direct subcommands for power users:
+MNEMOS-OS supports direct subcommands for power users:
 ```bash
-mnemos ghost  # Launch the zero-latency daemon in foreground
 mnemos mcp    # Launch the MCP server in debug mode
+mnemos ghost  # Launch the zero-latency daemon in foreground
+mnemos add [entity] [aspect] "[text]" # Direct memory insertion
 ```
 
-> **Note:** You no longer need to start the Ghost Kernel manually for daily use. The system features **Self-Healing IPC** and will wake up the daemon silently on your first command.
+> **Note:** For **Gemini CLI**, the memory protocol is now autonomous. Once registered via `setup`, any agent entering this workspace will automatically synchronize context and log decisions.
 
 <br>
 

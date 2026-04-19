@@ -33,6 +33,11 @@ class GhostBridge:
         self.is_connected = False
         self.silent = silent
         self.pipe_name = r'\\.\pipe\mnemos_ghost' if os.name == 'nt' else '/tmp/mnemos_ghost.sock'
+        
+        # FAILSAFE: Never autostart if we are already attempting to launch the ghost
+        if len(sys.argv) > 1 and sys.argv[1].lower() == "ghost":
+            autostart = False
+            
         self._connect()
         if not self.is_connected and autostart and os.environ.get("MNEMOS_NO_AUTOSTART") != "1":
             self.launch_ghost()
@@ -65,12 +70,11 @@ class GhostBridge:
         try:
             if os.name == 'nt':
                 # Windows Detached Process flags
-                DETACHED_PROCESS = 0x00000008
-                CREATE_NEW_PROCESS_GROUP = 0x00000200
+                # CREATE_NO_WINDOW (0x08000000) is usually enough to hide the window
                 CREATE_NO_WINDOW = 0x08000000
                 subprocess.Popen(
                     cmd, 
-                    creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW, 
+                    creationflags=CREATE_NO_WINDOW, 
                     stdout=subprocess.DEVNULL, 
                     stderr=subprocess.DEVNULL,
                     close_fds=True
@@ -87,6 +91,8 @@ class GhostBridge:
 
     def send(self, command, args=None, branch="main"):
         """Sends a command to the Ghost Kernel and returns the response."""
+        # Ensure we have a fresh connection for this request
+        self._connect()
         if not self.is_connected: return None
         try:
             payload = json.dumps({
@@ -106,11 +112,14 @@ class GhostBridge:
         except Exception:
             return None
         finally:
-            if os.name == 'nt':
-                import win32file
-                win32file.CloseHandle(self.handle)
-            else:
-                self.handle.close()
+            try:
+                if os.name == 'nt':
+                    import win32file
+                    win32file.CloseHandle(self.handle)
+                else:
+                    self.handle.close()
+            except: pass
+            self.is_connected = False
 
 def get_active_branch():
     """Reads the active branch from the .mnemos_branch file in the current workspace."""
@@ -135,17 +144,6 @@ def set_active_branch(branch_name):
         return False
 
 def main():
-    active_branch = get_active_branch()
-    
-    # Try to connect to Ghost Kernel for zero-latency
-    ghost = GhostBridge()
-    if ghost.is_connected:
-        # Sync branch state if Ghost is active
-        ghost.send("set_branch", {"branch": active_branch})
-    
-    # Fallback to local core if Ghost isn't running
-    mnemo = MnemosCore(branch=active_branch)
-    
     parser = argparse.ArgumentParser(description="MNEMOS-OS Command Line Interface")
     subparsers = parser.add_subparsers(dest="command")
 
@@ -217,8 +215,9 @@ def main():
     import_parser = subparsers.add_parser("import", help="Import memories from a JSON file")
     import_parser.add_argument("file", help="Source JSON file path")
 
-    # 16. Ghost Kernel (v1.2.1)
     subparsers.add_parser("ghost", help="Launch the Ghost Kernel (Ring -1) zero-latency daemon")
+    subparsers.add_parser("stop", help="Gracefully terminate the background Ghost Kernel daemon")
+    subparsers.add_parser("ping", help="Verify Ghost Kernel connection status")
 
     # 17. Help
     help_parser = subparsers.add_parser("help", help="Show this help message and exit")
@@ -242,6 +241,14 @@ def main():
         except Exception as e:
             print(f" {C_RED}❌ Error launching Ghost Kernel: {e}{C_RST}")
             sys.exit(1)
+
+    active_branch = get_active_branch()
+    
+    # Try to connect to Ghost Kernel for zero-latency
+    ghost = GhostBridge()
+    
+    # Fallback to local core if Ghost isn't running
+    mnemo = MnemosCore(branch=active_branch)
 
     if args.command == "add":
         if ghost.is_connected:
@@ -399,6 +406,22 @@ def main():
                 set_active_branch("main")
             print(f" {C_MAG}🗑  Deleted branch '{args.name}' ({count} memories removed).{C_RST}")
     
+    elif args.command == "stop":
+        if ghost.is_connected:
+            ghost.send("stop")
+            print(f" {C_MAG}👻 Ghost Kernel descending into the void...{C_RST}")
+        else:
+            print(f" {C_GRY}- Ghost Kernel is already offline.{C_RST}")
+
+    elif args.command == "ping":
+        if ghost.is_connected:
+            res = ghost.send("ping")
+            status = res.get("status", "unknown")
+            version = res.get("version", "?.?.?")
+            print(f" {C_GRN}[✔] Ghost Kernel: {status.upper()} (v{version}){C_RST}")
+        else:
+            print(f" {C_RED}[!] Ghost Kernel: OFFLINE{C_RST}")
+
     else:
         parser.print_help()
 
