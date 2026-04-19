@@ -9,9 +9,12 @@ MNEMOS-OS is designed as a **Micro-Kernel Memory Layer**. Unlike standard vector
 ## 👻 The Ghost Kernel (Ring -1)
 The Ghost Kernel is a persistent background daemon that bypasses the high latency of Python startup and SQLite initialization. 
 
-### IPC Communication
-- **Windows:** Uses **Named Pipes** (`\\.\pipe\mnemos_ghost`). v1.2.3 supports **Multi-Instance Instancing**, allowing simultaneous connections for high-concurrency environments.
-- **Linux/macOS:** Uses **Unix Sockets** (`/tmp/mnemos_ghost.sock`).
+### IPC Communication (Multi-Instance Isolation)
+v1.2.3 introduces **Path-Unique IPC**. The system automatically generates a unique identifier based on a hash of the project's absolute root directory. This allows multiple MNEMOS-OS projects to coexist on the same machine without IPC collisions.
+
+- **Windows:** Uses **Named Pipes** (`\\.\pipe\mnemos_ghost_[HASH]`). 
+- **Linux/macOS:** Uses **Unix Sockets** (`/tmp/mnemos_ghost_[HASH].sock`).
+- **Isolation:** Each project directory has its own dedicated "Ghost" daemon. Commands like `stop` or `ping` are context-aware and only target the daemon for the current workspace.
 
 ### Performance Metrics
 | Operation | Latency | Efficiency Gain |

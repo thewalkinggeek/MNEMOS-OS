@@ -26,13 +26,22 @@ C_GRY = "\033[90m"
 import json
 import socket
 import time
+import hashlib
 
 class GhostBridge:
     """Zero-latency bridge to the Ghost Kernel daemon."""
     def __init__(self, autostart=True, silent=False):
         self.is_connected = False
         self.silent = silent
-        self.pipe_name = r'\\.\pipe\mnemos_ghost' if os.name == 'nt' else '/tmp/mnemos_ghost.sock'
+        
+        # Calculate unique IPC name for this workspace
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        workspace_hash = hashlib.md5(base_dir.encode('utf-8')).hexdigest()[:8]
+        
+        if os.name == 'nt':
+            self.pipe_name = fr'\\.\pipe\mnemos_ghost_{workspace_hash}'
+        else:
+            self.pipe_name = f'/tmp/mnemos_ghost_{workspace_hash}.sock'
         
         # FAILSAFE: Never autostart if we are already attempting to launch the ghost
         if len(sys.argv) > 1 and sys.argv[1].lower() == "ghost":

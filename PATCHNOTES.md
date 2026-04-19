@@ -6,7 +6,8 @@ All notable changes to the MNEMOS-OS Kernel will be documented in this file.
 *Resolving critical file-locking issues and stabilizing high-concurrency IPC.*
 
 ### 👻 IPC Hardening
-- **Multi-Instance Named Pipes:** Re-engineered the Windows Ghost Kernel listener to support multi-instance Named Pipes. This eliminates "Pipe Busy" errors and allows multiple AI agents to communicate with the kernel simultaneously.
+- **Path-Unique IPC (Multi-Instance Isolation):** Re-engineered the Ghost Kernel to use a unique identifier (hash) based on the project's absolute root directory. This allows multiple MNEMOS-OS projects to coexist on the same machine without IPC collisions.
+- **Multi-Instance Named Pipes:** Updated the Windows listener to support simultaneous connections across different workspaces.
 - **Stateless GhostBridge:** Refactored the `GhostBridge` connection logic to be fully stateless. Every request now establishes a fresh connection, increasing reliability for long-lived sessions.
 
 ### 🛡️ Security & Integrity

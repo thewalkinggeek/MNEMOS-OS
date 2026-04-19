@@ -9,17 +9,23 @@ import threading
 import sqlite3
 import time
 
+import hashlib
+
 # Add parent directory to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(BASE_DIR)
 from core.engine import MnemosCore
+
+# Unique IPC name for this workspace to prevent collisions
+WORKSPACE_HASH = hashlib.md5(BASE_DIR.encode('utf-8')).hexdigest()[:8]
 
 # Platform-specific IPC
 if os.name == 'nt':
     import win32pipe, win32file, pywintypes
-    PIPE_NAME = r'\\.\pipe\mnemos_ghost'
+    PIPE_NAME = fr'\\.\pipe\mnemos_ghost_{WORKSPACE_HASH}'
 else:
     import socket
-    SOCKET_PATH = '/tmp/mnemos_ghost.sock'
+    SOCKET_PATH = f'/tmp/mnemos_ghost_{WORKSPACE_HASH}.sock'
 
 class GhostKernel:
     def __init__(self):
@@ -93,7 +99,7 @@ class GhostKernel:
             elif command == "update_task":
                 return {"success": self.core.update_task(**args)}
             elif command == "ping":
-                return {"status": "alive", "version": "1.2.2"}
+                return {"status": "alive", "version": "1.2.3"}
             elif command == "stop":
                 self.running = False
                 return {"status": "descending"}
