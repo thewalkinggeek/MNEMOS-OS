@@ -6,27 +6,36 @@
 import sys
 import os
 import argparse
+import json
+import socket
+import time
+import hashlib
 
 # Add the parent directory to sys.path so we can import core.engine
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.engine import MnemosCore
+from rich.console import Console
+from rich.theme import Theme
+from rich.table import Table
+from rich.panel import Panel
+from rich.text import Text
 
-# ANSI Color Constants for standard terminal output
-C_GRN = "\033[92m"
-C_YLW = "\033[93m"
-C_CYN = "\033[96m"
-C_RED = "\033[91m"
-C_BLU = "\033[94;1m" # Gemini Blue
-C_MAG = "\033[35;1m" # Gemini Magenta
-C_RST = "\033[0m"
-C_BLD = "\033[1m"
-C_GRY = "\033[90m"
+def get_console():
+    """Returns a Rich console with the MNEMOS-OS theme."""
+    return Console(theme=Theme({
+        "branding": "bright_blue bold",
+        "version": "grey50",
+        "success": "green",
+        "warning": "yellow",
+        "error": "red",
+        "info": "cyan",
+        "magenta": "bright_magenta",
+        "gray": "grey50",
+        "bold": "bold",
+    }))
 
-import json
-import socket
-import time
-import hashlib
+console = get_console()
 
 class GhostBridge:
     """Zero-latency bridge to the Ghost Kernel daemon."""
@@ -57,7 +66,7 @@ class GhostBridge:
     def _connect(self):
         try:
             if os.name == 'nt':
-                import win32file, pywintypes
+                import win32file
                 self.handle = win32file.CreateFile(
                     self.pipe_name,
                     win32file.GENERIC_READ | win32file.GENERIC_WRITE,
@@ -78,8 +87,6 @@ class GhostBridge:
         cmd = [sys.executable, os.path.abspath(__file__), "ghost"]
         try:
             if os.name == 'nt':
-                # Windows Detached Process flags
-                # CREATE_NO_WINDOW (0x08000000) is usually enough to hide the window
                 CREATE_NO_WINDOW = 0x08000000
                 subprocess.Popen(
                     cmd, 
@@ -89,18 +96,16 @@ class GhostBridge:
                     close_fds=True
                 )
             else:
-                # Unix Detached Process
                 subprocess.Popen(cmd, preexec_fn=os.setpgrp, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             
             if not self.silent:
-                print(f" {C_YLW}[!] Ghost Kernel offline. Waking up Ring -1 daemon...{C_RST}")
+                console.print(f" [warning][!] Ghost Kernel offline. Waking up Ring -1 daemon...[/warning]")
         except Exception as e:
             if not self.silent:
-                print(f" {C_RED}[!] Failed to auto-launch Ghost: {e}{C_RST}")
+                console.print(f" [error][!] Failed to auto-launch Ghost: {e}[/error]")
 
     def send(self, command, args=None, branch="main"):
         """Sends a command to the Ghost Kernel and returns the response."""
-        # Ensure we have a fresh connection for this request
         self._connect()
         if not self.is_connected: return None
         try:
@@ -131,7 +136,7 @@ class GhostBridge:
             self.is_connected = False
 
 def get_active_branch():
-    """Reads the active branch from the .mnemos_branch file in the current workspace."""
+    """Reads the active branch from the .mnemos_branch file."""
     branch_file = os.path.join(os.getcwd(), ".mnemos_branch")
     if os.path.exists(branch_file):
         try:
@@ -149,14 +154,14 @@ def set_active_branch(branch_name):
             f.write(branch_name)
         return True
     except Exception as e:
-        print(f" {C_RED}❌ Error switching branch: {e}{C_RST}")
+        console.print(f" [error]❌ Error switching branch: {e}[/error]")
         return False
 
 def main():
     parser = argparse.ArgumentParser(description="MNEMOS-OS Command Line Interface")
     subparsers = parser.add_subparsers(dest="command")
 
-    # 1. Add Memory
+    # Command Definitions
     add_parser = subparsers.add_parser("add", help="Archive a project fact, decision, or preference")
     add_parser.add_argument("entity")
     add_parser.add_argument("aspect", choices=["PREF", "BUG", "ARCH", "DEP", "LOG", "ANTI"])
@@ -165,71 +170,46 @@ def main():
     add_parser.add_argument("--file")
     add_parser.add_argument("--related", type=int, help="ID of a related memory")
 
-    # 2. Get Context
     ctx_parser = subparsers.add_parser("context", help="Retrieve dense shorthand briefing for AI agents")
     ctx_parser.add_argument("entity")
     ctx_parser.add_argument("--limit", type=int, default=15)
 
-    # 3. Search
     search_parser = subparsers.add_parser("search", help="Search all memories by keyword (FTS5)")
     search_parser.add_argument("query")
 
-    # 4. List
     list_parser = subparsers.add_parser("list", help="Browse stored memories by project")
     list_parser.add_argument("entity", nargs="?")
 
-    # 5. Scratchpad
-    scratch_parser = subparsers.add_parser("scratch", help="Set an active multi-step session plan")
-    scratch_parser.add_argument("plan")
+    subparsers.add_parser("scratch", help="Set an active multi-step session plan").add_argument("plan")
+    subparsers.add_parser("file", help="Get context specifically for a code file").add_argument("path")
 
-    # 6. File Context
-    file_parser = subparsers.add_parser("file", help="Get context specifically for a code file")
-    file_parser.add_argument("path")
-
-    # 7. Purge
     purge_parser = subparsers.add_parser("purge", help="Surgically clean old, low-salience memories")
     purge_parser.add_argument("--days", type=int, default=30)
     purge_parser.add_argument("--min-salience", type=int, default=3)
 
-    # 8. Details (Hydration)
-    details_parser = subparsers.add_parser("details", help="Hydrate a shorthand memory into full reasoning")
-    details_parser.add_argument("id", type=int)
-
-    # 9. Projects (Discovery)
+    subparsers.add_parser("details", help="Hydrate a shorthand memory into full reasoning").add_argument("id", type=int)
     subparsers.add_parser("projects", help="List all project entities in the database")
 
-    # 10. Branching (Phase 2)
-    branch_parser = subparsers.add_parser("branch", help="List all cognitive branches or create a new one")
-    branch_parser.add_argument("name", nargs="?", help="Optional: Name of the new branch to create/list")
+    branch_parser = subparsers.add_parser("branch", help="List or create cognitive branches")
+    branch_parser.add_argument("name", nargs="?")
 
-    # 11. Checkout (Phase 2)
-    checkout_parser = subparsers.add_parser("checkout", help="Switch the active cognitive branch")
-    checkout_parser.add_argument("name", help="Name of the branch to switch to")
+    subparsers.add_parser("checkout", help="Switch the active branch").add_argument("name")
+    
+    merge_parser = subparsers.add_parser("merge", help="Promote memories from one branch to another")
+    merge_parser.add_argument("source")
+    merge_parser.add_argument("--target", default="main")
 
-    # 12. Merge (Phase 2)
-    merge_parser = subparsers.add_parser("merge", help="Promote all memories from an experimental branch to main")
-    merge_parser.add_argument("source", help="The branch to merge from")
-    merge_parser.add_argument("--target", default="main", help="The branch to merge into (default: main)")
+    subparsers.add_parser("delete-branch", help="Delete a specific branch").add_argument("name")
 
-    # 13. Delete Branch (Phase 2)
-    delete_branch_parser = subparsers.add_parser("delete-branch", help="Delete all memories for a specific branch")
-    delete_branch_parser.add_argument("name", help="Name of the branch to delete")
+    export_parser = subparsers.add_parser("export", help="Export memories to JSON")
+    export_parser.add_argument("file")
+    export_parser.add_argument("--entity")
 
-    # 14. Export (v1.2.1)
-    export_parser = subparsers.add_parser("export", help="Export memories to a JSON file for portability")
-    export_parser.add_argument("file", help="Destination JSON file path")
-    export_parser.add_argument("--entity", help="Optional: Filter by project entity")
-
-    # 15. Import (v1.2.1)
-    import_parser = subparsers.add_parser("import", help="Import memories from a JSON file")
-    import_parser.add_argument("file", help="Source JSON file path")
-
-    subparsers.add_parser("ghost", help="Launch the Ghost Kernel (Ring -1) zero-latency daemon")
-    subparsers.add_parser("stop", help="Gracefully terminate the background Ghost Kernel daemon")
-    subparsers.add_parser("ping", help="Verify Ghost Kernel connection status")
-
-    # 17. Help
-    help_parser = subparsers.add_parser("help", help="Show this help message and exit")
+    subparsers.add_parser("import", help="Import memories from JSON").add_argument("file")
+    subparsers.add_parser("ghost", help="Launch the Ghost Kernel daemon")
+    subparsers.add_parser("stop", help="Terminate the Ghost Kernel daemon")
+    subparsers.add_parser("ping", help="Verify Ghost Kernel status")
+    subparsers.add_parser("help", help="Show this help message")
 
     args = parser.parse_args()
 
@@ -238,25 +218,21 @@ def main():
         sys.exit(0)
 
     if args.command == "ghost":
-        print(f" {C_BLU}👻 MNEMOS-OS GHOST KERNEL (Ring -1){C_RST}")
-        print(f" {C_GRY}Starting zero-latency IPC daemon...{C_RST}")
+        console.print(f"\n [branding]👻 MNEMOS-OS GHOST KERNEL (Ring -1)[/branding]")
+        console.print(f" [gray]Starting zero-latency IPC daemon...[/gray]")
         from core.ghost import GhostKernel
         try:
             kernel = GhostKernel()
             kernel.start()
         except KeyboardInterrupt:
-            print(f"\n {C_RED}[!] Ghost Kernel descending into the void...{C_RST}")
+            console.print(f"\n [error][!] Ghost Kernel descending into the void...[/error]")
             sys.exit(0)
         except Exception as e:
-            print(f" {C_RED}❌ Error launching Ghost Kernel: {e}{C_RST}")
+            console.print(f" [error]❌ Error launching Ghost Kernel: {e}[/error]")
             sys.exit(1)
 
     active_branch = get_active_branch()
-    
-    # Try to connect to Ghost Kernel for zero-latency
     ghost = GhostBridge()
-    
-    # Fallback to local core if Ghost isn't running
     mnemo = MnemosCore(branch=active_branch)
 
     if args.command == "add":
@@ -270,12 +246,12 @@ def main():
             row_id = mnemo.add_fact(args.entity, args.aspect, args.text, args.salience, file_path=args.file, related_id=args.related)
         
         if row_id == -1:
-            print(f" {C_GRY}- Ignored by Salience Filter (too noisy/short){C_RST}")
+            console.print(f" [gray]- Ignored by Salience Filter (too noisy/short)[/gray]")
         else:
             msg = f"Fact saved (ID: {row_id})"
             if args.file: msg += f" linked to {args.file}"
             if args.related: msg += f" related to ID:{args.related}"
-            print(f" {C_GRN}[+] {msg}{C_RST}")
+            console.print(f" [success][+] {msg}[/success]")
     
     elif args.command == "projects":
         if ghost.is_connected:
@@ -285,10 +261,13 @@ def main():
             entities = mnemo.list_entities()
             
         if not entities:
-            print(f" {C_RED}- No project entities found.{C_RST}")
+            console.print(f" [error]- No project entities found.[/error]")
         else:
-            print(f" {C_CYN}KNOWN PROJECT ENTITIES:{C_RST}")
-            print(f" {C_MAG}{', '.join(entities)}{C_RST}\n")
+            table = Table(title="KNOWN PROJECT ENTITIES", title_style="info")
+            table.add_column("Entity Name", style="magenta")
+            for ent in entities:
+                table.add_row(ent)
+            console.print(table)
 
     elif args.command == "details":
         if ghost.is_connected:
@@ -298,19 +277,19 @@ def main():
             d = mnemo.get_memory_details(args.id)
             
         if not d:
-            print(f" {C_RED}- Memory ID {args.id} not found.{C_RST}")
+            console.print(f" [error]- Memory ID {args.id} not found.[/error]")
         else:
-            print(f" {C_MAG}--- MEMORY HYDRATION [ID: {args.id}] ---{C_RST}")
-            print(f" {C_BLD}ENTITY:{C_RST}  {d['entity']}")
-            print(f" {C_BLD}TYPE:{C_RST}    {d['aspect']}")
-            print(f" {C_BLD}CREATED:{C_RST} {d['created']}")
+            content = f"[bold]ENTITY:[/bold]  {d['entity']}\n"
+            content += f"[bold]TYPE:[/bold]    {d['aspect']}\n"
+            content += f"[bold]CREATED:[/bold] {d['created']}\n"
             if d['related_id']:
-                print(f" {C_BLD}RELATED TO:{C_RST} [ID:{d['related_id']}] {d['related_shorthand']}")
-            print(f" {C_CYN}{'-' * 40}{C_RST}")
-            print(f" {C_BLD}SHORTHAND:{C_RST} {d['shorthand']}")
-            print(f" {C_YLW}--- RAW CONTENT ---{C_RST}")
-            print(f" {d['raw']}")
-            print(f" {C_MAG}{'-' * 40}{C_RST}\n")
+                content += f"[bold]RELATED:[/bold] [ID:{d['related_id']}] {d['related_shorthand']}\n"
+            content += "\n[info]SHORTHAND:[/info]\n"
+            content += f"{d['shorthand']}\n"
+            content += "\n[warning]--- RAW CONTENT ---[/warning]\n"
+            content += f"{d['raw']}"
+            
+            console.print(Panel(content, title=f"MEMORY HYDRATION [ID: {args.id}]", border_style="magenta"))
 
     elif args.command == "context":
         if ghost.is_connected:
@@ -318,8 +297,8 @@ def main():
             ctx = res.get("context", "Error retrieving context") if res else "Error"
         else:
             ctx = mnemo.get_context(args.entity, limit=args.limit)
-        print(f" {C_MAG}[ACTIVE MINDSET: {args.entity.upper()}]{C_RST}")
-        print(f" {C_CYN}{ctx}{C_RST}\n")
+        
+        console.print(Panel(Text(ctx, style="info"), title=f"ACTIVE MINDSET: {args.entity.upper()}", border_style="magenta"))
 
     elif args.command == "search":
         if ghost.is_connected:
@@ -329,14 +308,15 @@ def main():
             results = mnemo.search(args.query)
             
         if not results:
-            print(f" {C_RED}- No matches found.{C_RST}")
+            console.print(f" [error]- No matches found for '{args.query}'.[/error]")
         else:
-            print(f" {C_CYN}SEARCH RESULTS:{C_RST}")
-            print(f" {C_MAG}{'ENTITY':<12} | {'TYPE':<6} | {'SHORTHAND'}{C_RST}")
-            print(f" {'-' * 55}")
+            table = Table(title=f"SEARCH RESULTS: {args.query}", title_style="info")
+            table.add_column("ENTITY", style="bold", width=12)
+            table.add_column("TYPE", style="warning", width=6)
+            table.add_column("SHORTHAND")
             for r in results:
-                print(f" {C_BLD}{r[0]:<12}{C_RST} | {C_YLW}{r[1]:<6}{C_RST} | {r[2]}")
-            print("")
+                table.add_row(r[0], r[1], r[2])
+            console.print(table)
 
     elif args.command == "list":
         if ghost.is_connected:
@@ -346,42 +326,43 @@ def main():
             results = mnemo.list_memories(entity=args.entity)
         
         if not results:
-            print(f" {C_RED}- Memory is empty.{C_RST}")
+            console.print(f" [error]- Memory is empty.[/error]")
         else:
-            header = f"ALL MEMORIES:" if not args.entity else f"MEMORIES FOR {args.entity.upper()}:"
-            print(f" {C_CYN}{header}{C_RST}")
-            print(f" {C_MAG}{'ENTITY':<12} | {'TYPE':<6} | {'S':<2} | {'SHORTHAND'}{C_RST}")
-            print(f" {'-' * 55}")
+            title = "ALL MEMORIES" if not args.entity else f"MEMORIES FOR {args.entity.upper()}"
+            table = Table(title=title, title_style="info")
+            table.add_column("ENTITY", style="bold", width=12)
+            table.add_column("TYPE", style="warning", width=6)
+            table.add_column("S", style="gray", width=2)
+            table.add_column("SHORTHAND")
             for r in results:
-                print(f" {C_BLD}{str(r[0]):<12}{C_RST} | {C_YLW}{str(r[1]):<6}{C_RST} | {C_RST}{str(r[3]):<2} | {str(r[2])}")
-            print("")
+                table.add_row(str(r[0]), str(r[1]), str(r[3]), str(r[2]))
+            console.print(table)
 
     elif args.command == "export":
         count = mnemo.export_json(args.file, entity=args.entity)
-        print(f" {C_GRN}✔ Exported {count} memories to '{args.file}'{C_RST}")
+        console.print(f" [success]✔ Exported {count} memories to '{args.file}'[/success]")
 
     elif args.command == "import":
         count = mnemo.import_json(args.file)
         if count == -1:
-            print(f" {C_RED}❌ Import failed: File '{args.file}' not found.{C_RST}")
+            console.print(f" [error]❌ Import failed: File '{args.file}' not found.[/error]")
         else:
-            print(f" {C_GRN}✔ Imported {count} memories from '{args.file}'{C_RST}")
+            console.print(f" [success]✔ Imported {count} memories from '{args.file}'[/success]")
 
     elif args.command == "scratch":
         mnemo.update_scratchpad(args.plan)
-        print(f" {C_GRN}✔ Scratchpad updated.{C_RST}")
+        console.print(f" [success]✔ Scratchpad updated.[/success]")
 
     elif args.command == "file":
         ctx = mnemo.get_file_context(args.path)
         if ctx:
-            print(f" {C_MAG}[FILE CONTEXT: {args.path}]{C_RST}")
-            print(f" {C_CYN}{ctx}{C_RST}\n")
+            console.print(Panel(Text(ctx, style="info"), title=f"FILE CONTEXT: {args.path}", border_style="magenta"))
         else:
-            print(f" {C_YLW}- No specific memories for this file.{C_RST}")
+            console.print(f" [warning]- No specific memories for this file.[/warning]")
             
     elif args.command == "purge":
         deleted = mnemo.purge_lethe(days=args.days, min_salience=args.min_salience)
-        print(f" {C_MAG}🧹 Lethe Protocol: {C_RST}{C_GRN}{deleted} memories purged (>{args.days}d, salience < {args.min_salience}){C_RST}")
+        console.print(f" [magenta]🧹 Lethe Protocol: [success]{deleted} memories purged (>{args.days}d, salience < {args.min_salience})[/success][/magenta]")
     
     elif args.command == "branch":
         with mnemo._get_conn() as conn:
@@ -390,46 +371,46 @@ def main():
             branches = [row[0] for row in cursor.fetchall()]
             
         active = get_active_branch()
-        print(f" {C_CYN}COGNITIVE BRANCHES:{C_RST}")
+        console.print(f"\n [info]COGNITIVE BRANCHES:[/info]")
         for b in branches:
-            prefix = f"{C_GRN}* " if b == active else "  "
-            print(f" {prefix}{b}{C_RST}")
+            prefix = "[success]* [/success]" if b == active else "  "
+            console.print(f" {prefix}{b}")
         
         if args.name and args.name not in branches:
-            print(f" {C_YLW}- Branch '{args.name}' is new and will be created on first 'add'.{C_RST}")
+            console.print(f" [warning]- Branch '{args.name}' is new and will be created on first 'add'.[/warning]")
 
     elif args.command == "checkout":
         if set_active_branch(args.name):
-            print(f" {C_GRN}✔ Switched to branch '{args.name}'{C_RST}")
+            console.print(f" [success]✔ Switched to branch '{args.name}'[/success]")
 
     elif args.command == "merge":
         count = mnemo.merge_branch(args.source, args.target)
-        print(f" {C_GRN}✔ Merged {count} memories from '{args.source}' into '{args.target}'{C_RST}")
+        console.print(f" [success]✔ Merged {count} memories from '{args.source}' into '{args.target}'[/success]")
 
     elif args.command == "delete-branch":
         if args.name == "main":
-            print(f" {C_RED}❌ Cannot delete the 'main' branch.{C_RST}")
+            console.print(f" [error]❌ Cannot delete the 'main' branch.[/error]")
         else:
             count = mnemo.delete_branch(args.name)
             if get_active_branch() == args.name:
                 set_active_branch("main")
-            print(f" {C_MAG}🗑  Deleted branch '{args.name}' ({count} memories removed).{C_RST}")
+            console.print(f" [magenta]🗑  Deleted branch '{args.name}' ({count} memories removed).[/magenta]")
     
     elif args.command == "stop":
         if ghost.is_connected:
             ghost.send("stop")
-            print(f" {C_MAG}👻 Ghost Kernel descending into the void...{C_RST}")
+            console.print(f" [magenta]👻 Ghost Kernel descending into the void...[/magenta]")
         else:
-            print(f" {C_GRY}- Ghost Kernel is already offline.{C_RST}")
+            console.print(f" [gray]- Ghost Kernel is already offline.[/gray]")
 
     elif args.command == "ping":
         if ghost.is_connected:
             res = ghost.send("ping")
             status = res.get("status", "unknown")
             version = res.get("version", "?.?.?")
-            print(f" {C_GRN}[✔] Ghost Kernel: {status.upper()} (v{version}){C_RST}")
+            console.print(f" [success][✔] Ghost Kernel: {status.upper()} (v{version})[/success]")
         else:
-            print(f" {C_RED}[!] Ghost Kernel: OFFLINE{C_RST}")
+            console.print(f" [error][!] Ghost Kernel: OFFLINE[/error]")
 
     else:
         parser.print_help()

@@ -1,2 +1,3 @@
 prompt_toolkit
 mcp
+rich>=13.0.0

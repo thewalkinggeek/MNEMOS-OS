@@ -6,6 +6,15 @@ import sys
 import os
 import subprocess
 
+# Ensure the root directory is in sys.path before importing from cli
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
+from cli.mnemos import get_console
+
+console = get_console()
+
 def main():
     # Enable ANSI escape sequences on Windows
     if os.name == 'nt':
@@ -21,14 +30,14 @@ def main():
         
     elif cmd == "mcp":
         # Launch MCP Server (Debug/Manual Mode)
-        print(f"\033[35;1m[*] Launching MCP Server...\033[0m")
-        print(f"\033[90m[NOTE] This mode is for AI agents. Human input will cause JSON errors.\033[0m\n")
+        console.print(f"[magenta][*] Launching MCP Server...[/magenta]")
+        console.print(f"[gray][NOTE] This mode is for AI agents. Human input will cause JSON errors.[/gray]\n")
         subprocess.run([sys.executable, os.path.join("cli", "mcp_server.py")])
 
     elif cmd == "ghost":
         # Launch Ghost Kernel (Foreground Mode)
-        print(f"\033[35;1m[*] Launching Ghost Kernel (Foreground)...\033[0m")
-        print(f"\033[90m[NOTE] Zero-latency daemon now active. Press Ctrl+C to stop.\033[0m\n")
+        console.print(f"[magenta][*] Launching Ghost Kernel (Foreground)...[/magenta]")
+        console.print(f"[gray][NOTE] Zero-latency daemon now active. Press Ctrl+C to stop.[/gray]\n")
         subprocess.run([sys.executable, os.path.join("cli", "mnemos.py"), "ghost"])
         
     else:
