@@ -18,19 +18,19 @@ The system has evolved from a storage utility into a **"Kernel of Active Reasoni
 
 <br>
 
-![Version](https://img.shields.io/badge/version-v1.2.2-cyan)
+![Version](https://img.shields.io/badge/version-v1.2.3-cyan)
 ![Latency](https://img.shields.io/badge/latency-~0.1ms-green)
 ![OS](https://img.shields.io/badge/OS-Windows%20%7C%20Linux%20%7C%20macOS-orange)
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 <br>
 
-## 🚀 v1.2.2 — The Token Economy Update
-- 📉 **Adaptive Hydration (Low-Power Mode):** Slash token usage by **80%** with shorthand-only context.
-- 🎯 **Surgical Pre-Filtering:** Locally prioritize memories relevant to your current file or task.
+## 🚀 v1.2.3 — The IPC & Integrity Update
+- 👻 **Hardened Ghost IPC:** Re-engineered for high-concurrency. Multiple AI agents can now hit the kernel simultaneously with zero collisions.
+- 🛡️ **Workspace Boundary:** Active local defense now prevents AI agents from accidentally accessing files outside your project directory.
+- 📉 **Adaptive Hydration:** Slash token usage by **80%** with shorthand-only context.
 - 🤖 **Local Distillation:** Use **Ollama** (Phi-3/Mistral) for free, offline memory summarization.
-- 🛡️ **Executable Guardrails:** Store regex patterns for local, non-AI bug detection.
-- 👻 **Phantom Ghost:** Silent, windowless background daemon auto-launch on Windows.
+- 🐛 **Graceful Release:** Instant file-unlocking on exit ensures your database is always ready.
 
 <br>
 
@@ -40,8 +40,14 @@ The system has evolved from a storage utility into a **"Kernel of Active Reasoni
 
 ## ✨ Key Pillars
 
+### 👻 Multi-Agent IPC (Ghost Kernel)
+MNEMOS-OS v1.2.3 features a multi-instance IPC architecture. Whether you are using Cursor, a CLI agent, and a separate background script simultaneously, the **Ghost Kernel** manages the traffic with zero-latency overhead.
+
+### 🛡️ Workspace Boundary Enforcement
+Security is no longer just for code. MNEMOS-OS now enforces a strict **Workspace Boundary**. Any attempt by an AI agent to read or write files outside the current working directory (e.g., system logs or SSH keys) is blocked at the kernel level, ensuring your local environment stays private.
+
 ### 📉 Token Economy & Surgical Context
-MNEMOS-OS v1.2.2 introduces **Adaptive Hydration**. By default, the system serves high-density **MÍMIR-Shorthand**, using **90% fewer tokens** than raw text. Context is only "Hydrated" (expanded) when the AI specifically requests deeper reasoning. 
+MNEMOS-OS introduces **Adaptive Hydration**. By default, the system serves high-density **MÍMIR-Shorthand**, using **90% fewer tokens** than raw text. Context is only "Hydrated" (expanded) when the AI specifically requests deeper reasoning. 
 
 ### 🤖 The Offline Housekeeper
 Eliminate "Main" AI costs for technical housekeeping. By setting `MNEMOS_LOCAL_DISTILL=phi3`, MNEMOS-OS offloads all memory summarization to a local **Ollama** instance, ensuring your API budget is spent on code, not notes.
@@ -49,31 +55,17 @@ Eliminate "Main" AI costs for technical housekeeping. By setting `MNEMOS_LOCAL_D
 ### 🛡️ Executable Guardrails
 Transform `BUG` and `ANTI` memories into **Active Defense**. By attaching a `regex_pattern` to a memory, the Ghost Kernel can perform high-speed local scans to warn you about unsafe patterns before the AI even sees them.
 
-### 💎 MÍMIR-Shorthand Compression
-1,000 words become 50 tokens of "Fact-Shorthand" natively readable by LLMs.
-
-### 👻 The Ghost "Hive Mind"
-Synchronize your IDE (Cursor), CLI, and Browser into a single cognitive unit with zero-latency overhead via **Ring -1** IPC.
-
-### 🌿 Cognitive Version Control
-Treat your lore like code. Use `branch` to isolate experiments, `merge` for successful decisions, and `delete` for context cleanliness.
-
 <br>
 
-## 📈 Performance Benchmarks (v1.2.2)
+## 📈 Performance Benchmarks (v1.2.3)
 
 | Layer | Operation | Latency | Performance Note |
 | :--- | :--- | :--- | :--- |
 | **Pure IPC** | Integrated Agent | **~0.1ms** | Real-time "Neural" access |
+| **Concurrency** | Multi-Agent Hits | **Zero-Wait** | Multi-instance Named Pipe support |
 | **Context Shield** | Debounced Request | **~3.7ms** | **100% Token Savings** on redundant calls |
-| **Retrieval** | Surgical Filter + Guardrail | **~6.3ms** | Zero-token local bug defense |
-| **Full Engine** | Cold Start Retrieval | ~30.0ms | Standard SQLite/FTS5 lookup |
-| **Distillation** | Local AI (Ollama) | ~500ms | **Free** offline summarization |
-
-### 🚀 The v1.2.2 Velocity Advantage
-*   **Cost-Efficient:** **90% Cumulative Savings** via Token Shield (Debouncing).
-*   **Guardrails:** Detects architectural violations in **< 7ms** locally.
-*   **Throughput:** Ghost IPC is **~2,500x faster** than traditional process spawning.
+| **Security** | Boundary Validation | **<1ms** | Local path enforcement |
+| **Retrieval** | Surgical Filter | **~6.3ms** | Zero-token local bug defense |
 
 <br>
 

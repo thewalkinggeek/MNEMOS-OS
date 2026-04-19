@@ -14,11 +14,26 @@ MNEMOS-OS uses a background daemon for Ring -1 performance.
 Launches the Ghost Kernel IPC listener. 
 - **Latency:** ~0.1ms retrieval for integrated agents (MCP/IDE).
 - **Protocol:** Windows Named Pipes or Unix Domain Sockets.
-- **Backgrounding:** For best performance, keep this running in a separate CLI window.
-- **Self-Healing:** If the Ghost Kernel is offline, the CLI will automatically attempt to spawn it in the background on your first command.
+- **Concurrency:** v1.2.3 supports multi-instance listeners, allowing multiple agents to connect simultaneously.
+
+### `stop` (New in v1.2.3)
+Gracefully terminates the background Ghost Kernel daemon. This ensures all SQLite connections are closed and file locks are released immediately.
+
+### `ping` (New in v1.2.3)
+Verifies the connection status of the Ghost Kernel. Returns the daemon's current status and version.
 
 ### `mcp`
 Launches the Model Context Protocol (MCP) server directly.
+
+---
+
+## 🚀 Security Boundary Enforcement
+
+MNEMOS-OS v1.2.3 enforces a strict **Workspace Boundary**. All file operations performed by the engine or through the IPC layer are validated against the current working directory.
+
+- **Blocked:** Accessing files in parent directories (`../`) or sibling projects.
+- **Allowed:** Accessing any file or subdirectory within the current project root.
+- **Impact:** Prevents AI agents from accidentally leaking system secrets (e.g., `~/.ssh`) into the memory context.
 
 ---
 

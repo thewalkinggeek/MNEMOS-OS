@@ -10,19 +10,30 @@ MNEMOS-OS is designed as a **Micro-Kernel Memory Layer**. Unlike standard vector
 The Ghost Kernel is a persistent background daemon that bypasses the high latency of Python startup and SQLite initialization. 
 
 ### IPC Communication
-- **Windows:** Uses **Named Pipes** (`\\.\pipe\mnemos_ghost`).
+- **Windows:** Uses **Named Pipes** (`\\.\pipe\mnemos_ghost`). v1.2.3 supports **Multi-Instance Instancing**, allowing simultaneous connections for high-concurrency environments.
 - **Linux/macOS:** Uses **Unix Sockets** (`/tmp/mnemos_ghost.sock`).
 
 ### Performance Metrics
 | Operation | Latency | Efficiency Gain |
 | :--- | :--- | :--- |
-| **Integrated Agent (Pure IPC)** | **~0.1ms** | **2,500x Faster** vs Spawn |
+| **Pure IPC** | **~0.1ms** | **2,500x Faster** vs Spawn |
+| **Concurrency** | **Zero-Wait** | Multi-agent safe |
 | **Context Shield (Debounced)** | **~3.7ms** | **100% Token Savings** |
+| **Boundary Check** | **<1ms** | Workspace security |
 | **Guardrail Scan + Filter** | **~6.3ms** | Zero-token local defense |
 | **Standard Setup (Direct)** | ~30.0ms | Cold start baseline |
 
 ### Stateless Design
-v1.2.0 introduced a stateless architecture where the Ghost Kernel does not "hold" a global active branch. Instead, every IPC request includes the `branch` parameter. This allows a single Ghost instance to serve different branches to different AI agents (e.g., Cursor working in `main` while a CLI tool works in `experiment`) simultaneously without race conditions.
+v1.2.0 introduced a stateless architecture where the Ghost Kernel does not "hold" a global active branch. Instead, every IPC request includes the `branch` parameter. In v1.2.3, the `GhostBridge` is also stateless, ensuring that every request establishes a fresh, isolated connection to the kernel.
+
+---
+
+## 🛡️ Security Boundaries (Ring 0 Defense)
+v1.2.3 introduces the **Workspace Boundary Enforcement** layer within the core engine.
+
+- **Path Sanitization:** Every file path passed to the kernel is normalized and validated against the Current Working Directory (CWD).
+- **Sub-Directory Inclusion:** The kernel uses `os.path.commonpath` to ensure all children and sub-directories are accessible while blocking any attempt to escape to parent or sibling directories.
+- **Data Leak Prevention:** Prevents AI agents from accidentally reading sensitive files (e.g., `.git`, `.env`, `~/.ssh`) that are not explicitly part of the project's active workspace.
 
 ---
 
